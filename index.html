@@ -258,8 +258,8 @@
   </nav>
 
   <!-- ================= TỆP DỮ LIỆU BÀI HỌC ================= -->
-  <!-- Nạp tệp dữ liệu JavaScript tương ứng đã biên soạn -->
-  <script src="lesson_HSK1.js" onerror="window.__LESSON_LOAD_ERROR__ = true;"></script>
+  <!-- Danh mục bài học (manifest.js). Từng bài được tải khi cần từ thư mục data/ -->
+  <script src="manifest.js"></script>
 
   <!-- ================= APPLICATION ENGINE SCRIPT ================= -->
   <script>
@@ -365,7 +365,7 @@
         if (!rawLesson) return null;
         const lessonId = String(rawLesson.id || `lesson_${index + 1}`);
         const title = rawLesson.title || `Bài học ${index + 1}`;
-        const level = (rawLesson.level || "HSK1").toUpperCase();
+        const level = String(rawLesson.level || "HSK1").toUpperCase().replace(/\s+/g, "");
 
         const groups = (rawLesson.groups || []).map((grp, gIdx) => {
           const groupId = String(grp.id || `${lessonId}_g${gIdx + 1}`);
@@ -534,10 +534,112 @@
           id: lessonId,
           title,
           level,
+          number: Number(rawLesson.number) || 0,
+          desc: rawLesson.desc || '',
           groups
         };
       }
     };
+
+    // 2B. KHO DỮ LIỆU NHIỀU CẤP ĐỘ / NHIỀU BÀI (MANIFEST + LAZY LOADING)
+    const DataStore = {
+      manifest: [],        // danh mục: { id, level, number, title, words, file, v }
+      promises: {},        // id -> Promise đang tải
+      failed: {},          // id -> thông báo lỗi
+      loadingIds: {},      // id -> true khi đang tải (để hiển thị)
+      lastScriptError: '',
+
+      init() {
+        window.addEventListener('error', e => {
+          if (e && e.filename && /\.js/.test(e.filename)) {
+            this.lastScriptError = `${e.message} (${String(e.filename).split('/').slice(-2).join('/').split('?')[0]}:${e.lineno})`;
+          }
+        });
+        const list = Array.isArray(window.HSK_MANIFEST) ? window.HSK_MANIFEST : [];
+        list.forEach(m => {
+          if (!m || !m.id) return;
+          this.manifest.push({
+            id: String(m.id),
+            level: String(m.level || 'HSK1').toUpperCase().replace(/\s+/g, ''),
+            number: Number(m.number) || 0,
+            title: m.title || m.id,
+            desc: m.desc || '',
+            words: Number(m.words) || 0,
+            file: m.file || null,
+            v: m.v || ''
+          });
+        });
+        // Tương thích kiểu cũ: tệp khai báo sẵn mảng ALL_LESSONS
+        const legacy = DataNormalizer.findRawLessons();
+        if (legacy) legacy.forEach(r => this.register(r));
+      },
+
+      // Tệp bài học gọi hàm này: HSK_REGISTER({ ... })
+      register(raw) {
+        const idx = AppStore.lessons.length;
+        const lesson = DataNormalizer.normalizeLesson(raw, idx);
+        if (!lesson) return;
+        const at = AppStore.lessons.findIndex(l => l.id === lesson.id);
+        if (at >= 0) AppStore.lessons[at] = lesson; else AppStore.lessons.push(lesson);
+        const count = lesson.groups.reduce((a, g) => a + g.words.length, 0);
+        let e = this.entry(lesson.id);
+        if (!e) {
+          e = { id: lesson.id, level: lesson.level, number: lesson.number, title: lesson.title, desc: lesson.desc, words: count, file: null, v: '' };
+          this.manifest.push(e);
+        } else {
+          e.words = count; // số từ thực tế luôn đúng hơn số khai báo
+        }
+        delete this.failed[lesson.id];
+      },
+
+      entry(id) { return this.manifest.find(m => m.id === id) || null; },
+      getLoaded(id) { return AppStore.lessons.find(l => l.id === id) || null; },
+      isLoaded(id) { return !!this.getLoaded(id); },
+
+      levelNum(l) { const n = parseInt(String(l).replace(/\D/g, ''), 10); return isNaN(n) ? 99 : n; },
+      levels() {
+        return [...new Set(this.manifest.map(m => m.level))].sort((a, b) => this.levelNum(a) - this.levelNum(b) || a.localeCompare(b));
+      },
+      lessonsOf(level) {
+        return this.manifest.filter(m => m.level === level).sort((a, b) => a.number - b.number || a.title.localeCompare(b.title));
+      },
+      wordsOf(level) { return this.lessonsOf(level).reduce((a, m) => a + (m.words || 0), 0); },
+      totalWords() { return this.manifest.reduce((a, m) => a + (m.words || 0), 0); },
+
+      lessonProgress(id) {
+        const done = Object.keys(Storage.getProgress().completedWords || {}).filter(k => k.startsWith(id + '-')).length;
+        const e = this.entry(id);
+        return { done, total: e ? e.words : 0 };
+      },
+
+      load(id) {
+        if (this.isLoaded(id)) return Promise.resolve();
+        if (this.promises[id]) return this.promises[id];
+        const e = this.entry(id);
+        if (!e || !e.file) return Promise.reject(new Error(`Không có tệp dữ liệu cho bài "${id}" trong manifest.js`));
+        this.loadingIds[id] = true;
+        const p = new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          this.lastScriptError = '';
+          s.src = e.file + (e.v ? `?v=${encodeURIComponent(e.v)}` : '');
+          s.async = true;
+          s.onload = () => {
+            if (this.isLoaded(id)) resolve();
+            else reject(new Error(`Tệp ${e.file} đã tải nhưng không đăng ký được bài "${id}". ${this.lastScriptError ? 'Lỗi: ' + this.lastScriptError : 'Kiểm tra lại id trong tệp và manifest.js.'}`));
+          };
+          s.onerror = () => reject(new Error(`Không tải được tệp ${e.file} (sai đường dẫn hoặc chưa đăng lên GitHub).`));
+          document.head.appendChild(s);
+        });
+        this.promises[id] = p;
+        const cleanup = () => { delete this.loadingIds[id]; };
+        p.then(() => { cleanup(); delete this.promises[id]; }, err => { cleanup(); delete this.promises[id]; this.failed[id] = err.message; });
+        return p;
+      },
+
+      ensure(ids) { return Promise.all(ids.map(id => this.load(id))); },
+      unloadedIds(ids) { return ids.filter(id => !this.isLoaded(id)); }
+    };
+    window.HSK_REGISTER = (raw) => DataStore.register(raw);
 
     // 3. BỘ ĐIỀU PHỐI ÂM THANH DUAL-LANGUAGE TTS ENGINE
     const TTS = {
@@ -734,7 +836,9 @@
       currentGroup: null,
       currentWord: null,
       currentTab: 'home',
-      searchQuery: ''
+      searchQuery: '',
+      libLevel: '',
+      libQuery: ''
     };
 
     const Router = {
@@ -747,7 +851,11 @@
 
         if (params.lessonId) {
           const l = AppStore.lessons.find(item => item.id === params.lessonId);
-          if (l) AppStore.currentLesson = l;
+          if (l && AppStore.currentLesson !== l) {
+            AppStore.currentLesson = l;
+            AppStore.currentGroup = l.groups[0] || null;
+            AppStore.currentWord = AppStore.currentGroup ? (AppStore.currentGroup.words[0] || null) : null;
+          }
         }
         if (params.groupId && AppStore.currentLesson) {
           const g = AppStore.currentLesson.groups.find(item => item.id === params.groupId);
@@ -765,8 +873,28 @@
         Storage.saveProgress(progress);
 
         this.updateNavButtons(tab);
+        this.updateTopIndicator();
         Renderer.renderCurrentView();
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      updateTopIndicator() {
+        const el = document.getElementById('top-lesson-indicator');
+        if (!el) return;
+        const l = AppStore.currentLesson;
+        el.textContent = l ? `${l.level} • ${l.title}` : `${DataStore.levels().length} cấp độ • ${DataStore.manifest.length} bài`;
+      },
+
+      async openLesson(id, tab = 'lesson') {
+        if (!DataStore.isLoaded(id)) {
+          delete DataStore.failed[id];
+          DataStore.loadingIds[id] = true;
+          Renderer.refreshLibList();
+          try { await DataStore.load(id); } catch (e) { DataStore.failed[id] = e.message; }
+        }
+        if (!DataStore.isLoaded(id)) { Renderer.refreshLibList(); return; }
+        if (tab === 'passive') Passive.setScopeToLesson(id);
+        this.navigate(tab, { lessonId: id });
       },
 
       updateNavButtons(tab) {
@@ -797,8 +925,12 @@
         const viewport = document.getElementById('app-viewport');
         if (!viewport) return;
 
-        if (!AppStore.lessons || AppStore.lessons.length === 0) {
+        if (DataStore.manifest.length === 0 && AppStore.lessons.length === 0) {
           viewport.innerHTML = this.renderEmptyDataNotice();
+          return;
+        }
+        if (['lesson', 'exercise', 'review'].includes(AppStore.currentTab) && !AppStore.currentLesson) {
+          viewport.innerHTML = this.renderPickLessonNotice();
           return;
         }
 
@@ -824,10 +956,34 @@
           case 'passive':
             viewport.innerHTML = this.renderPassiveView();
             Passive.syncUI();
+            Passive.autoLoad();
             break;
           default:
             viewport.innerHTML = this.renderHomeView();
         }
+      },
+
+      renderPickLessonNotice() {
+        const loading = Object.keys(DataStore.loadingIds).length > 0;
+        return `
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center max-w-lg mx-auto my-8">
+            <div class="text-4xl mb-3">${loading ? '⏳' : '📚'}</div>
+            <h2 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2">${loading ? 'Đang tải bài học...' : 'Chưa chọn bài học'}</h2>
+            <p class="text-sm text-slate-500 mb-5">Hãy chọn cấp độ và một bài trong Thư viện.</p>
+            <button onclick="Router.navigate('home')" class="touch-target px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm">Mở Thư viện</button>
+          </div>`;
+      },
+
+      async loadAllLessons() {
+        const ids = DataStore.manifest.map(m => m.id).filter(id => !DataStore.isLoaded(id));
+        const st = document.getElementById('load-all-status');
+        let n = 0;
+        for (const id of ids) {
+          try { await DataStore.load(id); } catch (e) { /* lỗi hiển thị ở Thư viện */ }
+          n++;
+          if (st) st.textContent = `Đang tải ${n}/${ids.length}...`;
+        }
+        this.renderCurrentView();
       },
 
       renderEmptyDataNotice() {
@@ -838,7 +994,7 @@
             </div>
             <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Chưa tìm thấy tệp bài học</h2>
             <p class="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-              Vui lòng đặt tệp học liệu <code>lesson_HSK1.js</code> cùng thư mục với tệp <code>index.html</code> này. Tệp cần chứa mảng <code>ALL_LESSONS</code>.
+              Không thấy danh mục bài học. Hãy đặt tệp <code>manifest.js</code> cùng thư mục với <code>index.html</code> và khai báo các bài trong <code>HSK_MANIFEST</code>; mỗi bài nằm ở thư mục <code>data/</code>.
             </p>
             <button onclick="location.reload()" class="touch-target px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow">
               Tải lại trang ⟳
@@ -847,40 +1003,42 @@
         `;
       },
 
-      // === A. TRANG CHỦ ===
+      // === A. TRANG CHỦ = THƯ VIỆN CẤP ĐỘ / BÀI HỌC ===
       renderHomeView() {
         const progress = Storage.getProgress();
-        const totalWords = AppStore.lessons.reduce((acc, l) => acc + l.groups.reduce((gAcc, g) => gAcc + g.words.length, 0), 0);
-        const learnedWordsCount = Object.keys(progress.completedWords || {}).length;
-        const pct = totalWords ? Math.round(learnedWordsCount / totalWords * 100) : 0;
+        const levels = DataStore.levels();
+        const level = AppStore.libLevel && levels.includes(AppStore.libLevel) ? AppStore.libLevel
+          : (AppStore.currentLesson && levels.includes(AppStore.currentLesson.level) ? AppStore.currentLesson.level : levels[0]);
+        AppStore.libLevel = level;
+
+        const totalWords = DataStore.totalWords();
+        const learned = Object.keys(progress.completedWords || {}).length;
+        const pct = totalWords ? Math.min(100, Math.round(learned / totalWords * 100)) : 0;
         const C = 2 * Math.PI * 34;
 
         const now = Date.now();
-        let dueReviewCount = 0;
-        Object.values(progress.reviewsSchedule || {}).forEach(r => {
-          if (r.dueDate && r.dueDate <= now) dueReviewCount++;
-        });
+        let due = 0;
+        Object.values(progress.reviewsSchedule || {}).forEach(r => { if (r.dueDate && r.dueDate <= now) due++; });
 
-        const curLesson = AppStore.currentLesson || AppStore.lessons[0];
-        const gradients = [
-          'from-indigo-500 to-violet-600', 'from-sky-500 to-indigo-600',
-          'from-fuchsia-500 to-pink-600', 'from-emerald-500 to-teal-600'
-        ];
+        const cur = AppStore.currentLesson;
+        const lvLessons = DataStore.lessonsOf(level);
+        const lvWords = DataStore.wordsOf(level);
+        const lvDone = lvLessons.reduce((a, m) => a + DataStore.lessonProgress(m.id).done, 0);
 
         return `
           <div class="space-y-5">
-            <!-- Hero -->
             <section class="relative overflow-hidden rounded-3xl p-6 sm:p-8 text-white" style="background:linear-gradient(135deg,#4338ca,#6d28d9 55%,#be185d);box-shadow:0 28px 50px -26px rgba(76,29,149,.9)">
               <div class="hanzi-text absolute -right-4 -top-8 text-[9rem] font-black leading-none opacity-10 select-none">汉</div>
               <div class="relative flex items-center justify-between gap-4">
                 <div class="min-w-0">
                   <div class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-indigo-100 bg-white/15 rounded-full px-3 py-1 mb-3">
-                    ${this.escapeHtml(curLesson.level)} • Học âm thanh tương tác
+                    ${levels.length} cấp độ • ${DataStore.manifest.length} bài • ${totalWords} từ
                   </div>
-                  <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight mb-2">${this.escapeHtml(curLesson.title)}</h2>
-                  <p class="text-sm text-indigo-100/90 max-w-md leading-relaxed">
-                    Nghe giảng từng từ, phân tích ví dụ, tránh bẫy ngữ pháp của người Việt, hoặc bật nghe rảnh tay mọi lúc.
+                  <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight mb-2">${cur ? this.escapeHtml(cur.title) : 'Thư viện HSK'}</h2>
+                  <p class="text-sm text-indigo-100/90 max-w-md leading-relaxed mb-4">
+                    ${cur ? `${this.escapeHtml(cur.level)} • bài đang học dở. Tiếp tục ngay hoặc chọn bài khác bên dưới.` : 'Chọn cấp độ rồi chạm vào một bài để bắt đầu nghe giảng.'}
                   </p>
+                  ${cur ? `<button onclick="Router.navigate('lesson')" class="touch-target px-5 py-2.5 rounded-2xl bg-white text-indigo-900 font-bold text-sm shadow-md">Tiếp tục học ➔</button>` : ''}
                 </div>
                 <div class="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28">
                   <svg viewBox="0 0 80 80" class="w-full h-full -rotate-90">
@@ -890,93 +1048,116 @@
                   </svg>
                   <div class="absolute inset-0 flex flex-col items-center justify-center leading-none">
                     <span class="text-2xl font-black">${pct}%</span>
-                    <span class="text-[10px] font-semibold text-indigo-100 mt-1">${learnedWordsCount}/${totalWords} từ</span>
+                    <span class="text-[10px] font-semibold text-indigo-100 mt-1">${learned}/${totalWords} từ</span>
                   </div>
                 </div>
               </div>
             </section>
 
-            <!-- Lối tắt -->
             <section class="grid grid-cols-3 gap-3">
-              <button onclick="Router.navigate('lesson', { lessonId: '${curLesson.id}' })" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center">
-                <div class="text-2xl mb-1">📖</div>
-                <div class="text-xs font-extrabold text-slate-900 dark:text-white">Học tiếp</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Nghe giảng</div>
-              </button>
-              <button onclick="Router.navigate('passive')" class="relative rounded-2xl p-4 text-center text-white" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 14px 28px -14px rgba(99,102,241,.9)">
+              <button onclick="Router.navigate('passive')" class="rounded-2xl p-4 text-center text-white" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 14px 28px -14px rgba(99,102,241,.9)">
                 <div class="text-2xl mb-1">🎧</div>
                 <div class="text-xs font-extrabold">Nghe thụ động</div>
                 <div class="text-[11px] text-indigo-100">Rảnh tay</div>
               </button>
               <button onclick="Router.navigate('review')" class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center">
-                ${dueReviewCount > 0 ? `<span class="absolute top-2 right-2 min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-white text-[11px] font-black flex items-center justify-center">${dueReviewCount}</span>` : ''}
+                ${due > 0 ? `<span class="absolute top-2 right-2 min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-white text-[11px] font-black flex items-center justify-center">${due}</span>` : ''}
                 <div class="text-2xl mb-1">🔁</div>
                 <div class="text-xs font-extrabold text-slate-900 dark:text-white">Ôn 1-3-7</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">${dueReviewCount} từ đến hạn</div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400">${due} từ đến hạn</div>
+              </button>
+              <button onclick="Router.navigate('search')" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center">
+                <div class="text-2xl mb-1">🔎</div>
+                <div class="text-xs font-extrabold text-slate-900 dark:text-white">Tra từ</div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400">Hán / Pinyin / Nghĩa</div>
               </button>
             </section>
 
-            <!-- Số liệu -->
-            <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-                <div class="text-[11px] font-bold uppercase text-slate-400">Từ đã học</div>
-                <div class="text-2xl font-black text-slate-900 dark:text-white mt-1">${learnedWordsCount} <span class="text-xs font-normal text-slate-400">/ ${totalWords}</span></div>
-              </div>
-              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-                <div class="text-[11px] font-bold uppercase text-amber-500">Cần ôn hôm nay</div>
-                <div class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">${dueReviewCount} <span class="text-xs font-normal text-slate-400">từ</span></div>
-              </div>
-              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-                <div class="text-[11px] font-bold uppercase text-indigo-500">Nhóm chủ đề</div>
-                <div class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">${curLesson.groups.length}</div>
-              </div>
-              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-                <div class="text-[11px] font-bold uppercase text-emerald-500">Bài tập đã làm</div>
-                <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">${Object.keys(progress.completedExercises || {}).length}</div>
+            <!-- Chọn cấp độ -->
+            <section>
+              <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                ${levels.map(lv => {
+                  const ls = DataStore.lessonsOf(lv);
+                  const w = DataStore.wordsOf(lv);
+                  const d = ls.reduce((a, m) => a + DataStore.lessonProgress(m.id).done, 0);
+                  return `<button onclick="Renderer.setLibLevel('${lv}')" class="chip shrink-0 flex-col !items-start !py-2 !min-h-0 ${lv === level ? 'on' : ''}" style="min-width:7.2rem">
+                    <span class="text-sm font-black leading-none">${lv}</span>
+                    <span class="text-[10px] font-semibold opacity-80 leading-tight">${ls.length} bài · ${d}/${w} từ</span>
+                  </button>`;
+                }).join('')}
               </div>
             </section>
 
-            <!-- Nhóm từ vựng -->
             <section class="space-y-3">
-              <div class="flex items-center justify-between">
-                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Các nhóm từ vựng</h3>
-                <span class="text-xs text-slate-500">Chạm để học</span>
+              <div class="flex items-end justify-between gap-3">
+                <div>
+                  <h3 class="text-base font-extrabold text-slate-900 dark:text-white">${level} · ${lvLessons.length} bài</h3>
+                  <div class="text-xs text-slate-500">${lvDone}/${lvWords} từ đã học</div>
+                </div>
+                ${lvLessons.length > 8 ? `<input type="search" value="${this.escapeHtml(AppStore.libQuery)}" oninput="AppStore.libQuery=this.value;Renderer.refreshLibList()" placeholder="Lọc bài..." class="w-40 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />` : ''}
               </div>
-              <div class="grid gap-3 sm:grid-cols-2">
-                ${curLesson.groups.map((g, gIdx) => {
-                  const total = g.words.length;
-                  const done = g.words.filter(w => progress.completedWords[w.id]).length;
-                  const p = total ? Math.round(done / total * 100) : 0;
-                  const preview = g.words.slice(0, 6).map(w => w.hanzi).join(' · ');
-                  return `
-                    <div onclick="Router.navigate('lesson', { lessonId: '${curLesson.id}', groupId: '${g.id}', wordId: '${g.words[0] ? g.words[0].id : ''}' })" class="cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 hover:border-indigo-400 transition">
-                      <div class="flex items-start gap-3">
-                        <div class="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br ${gradients[gIdx % gradients.length]} text-white font-black text-lg flex items-center justify-center shadow-md">${gIdx + 1}</div>
-                        <div class="min-w-0 flex-1">
-                          <h4 class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">${this.escapeHtml(g.title)}</h4>
-                          <p class="hanzi-text text-sm font-bold text-indigo-600 dark:text-indigo-300 mt-1 truncate">${this.escapeHtml(preview)}</p>
-                        </div>
-                      </div>
-                      <div class="mt-3 flex items-center gap-3">
-                        <div class="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:${p}%"></div></div>
-                        <span class="text-[11px] font-semibold text-slate-500">${done}/${total}</span>
-                      </div>
-                    </div>`;
-                }).join('')}
-              </div>
+              <div id="lib-list" class="grid gap-3 sm:grid-cols-2">${this.libraryListHtml()}</div>
             </section>
           </div>
         `;
       },
 
+      libraryListHtml() {
+        const level = AppStore.libLevel;
+        const q = (AppStore.libQuery || '').toLowerCase().trim();
+        let list = DataStore.lessonsOf(level);
+        if (q) list = list.filter(m => (m.title + ' ' + m.number).toLowerCase().includes(q));
+        if (!list.length) return `<div class="text-sm text-slate-500 py-6 text-center sm:col-span-2">Chưa có bài nào${q ? ' khớp bộ lọc' : ' trong cấp độ này'}.</div>`;
+        const curId = AppStore.currentLesson && AppStore.currentLesson.id;
+        const grads = ['from-indigo-500 to-violet-600', 'from-sky-500 to-indigo-600', 'from-fuchsia-500 to-pink-600', 'from-emerald-500 to-teal-600'];
+
+        return list.map((m, i) => {
+          const pr = DataStore.lessonProgress(m.id);
+          const p = pr.total ? Math.min(100, Math.round(pr.done / pr.total * 100)) : 0;
+          const busy = !!DataStore.loadingIds[m.id];
+          const err = DataStore.failed[m.id];
+          return `
+            <div class="bg-white dark:bg-slate-900 border ${m.id === curId ? 'border-indigo-400' : 'border-slate-200 dark:border-slate-800'} rounded-2xl p-4">
+              <div class="flex items-start gap-3 cursor-pointer" onclick="Router.openLesson('${m.id}')">
+                <div class="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br ${grads[i % grads.length]} text-white font-black text-lg flex items-center justify-center shadow-md">${m.number || i + 1}</div>
+                <div class="min-w-0 flex-1">
+                  <h4 class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">${this.escapeHtml(m.title)}</h4>
+                  <div class="text-[11px] text-slate-500 mt-0.5">${m.words || '?'} từ${DataStore.isLoaded(m.id) ? ' · đã tải' : ''}${m.id === curId ? ' · đang học' : ''}</div>
+                </div>
+              </div>
+              <div class="mt-3 flex items-center gap-3">
+                <div class="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:${p}%"></div></div>
+                <span class="text-[11px] font-semibold text-slate-500">${pr.done}/${pr.total}</span>
+              </div>
+              <div class="mt-3 flex gap-2">
+                <button onclick="Router.openLesson('${m.id}')" ${busy ? 'disabled' : ''} class="chip flex-1 ${busy ? 'opacity-60' : ''}">${busy ? '⏳ Đang tải...' : '📖 Học'}</button>
+                <button onclick="Router.openLesson('${m.id}', 'passive')" ${busy ? 'disabled' : ''} class="chip flex-1">🎧 Nghe bài này</button>
+              </div>
+              ${err ? `<p class="mt-2 text-xs text-rose-600 dark:text-rose-400 leading-snug">⚠ ${this.escapeHtml(err)}</p>` : ''}
+            </div>`;
+        }).join('');
+      },
+
+      refreshLibList() {
+        const el = document.getElementById('lib-list');
+        if (el) el.innerHTML = this.libraryListHtml();
+      },
+      setLibLevel(lv) { AppStore.libLevel = lv; AppStore.libQuery = ''; this.renderCurrentView(); },
+
       // === P. TAB NGHE THỤ ĐỘNG (PASSIVE LISTENING STUDIO) ===
       renderPassiveView() {
         const c = Passive.cfg;
-        const all = Passive.allWords();
-        const groups = Passive.groupList();
+        const levels = DataStore.levels();
+        const level = Passive.level();
+        const lvLessons = DataStore.lessonsOf(level);
+        const selIds = Passive.scopeLessonIds();
+        const allLessonsSel = !(c.lessons && c.lessons.length) || selIds.length === lvLessons.length;
         const scoped = Passive.scopedWords();
-        const scopedIds = new Set(scoped.map(x => x.w.id));
-        const allSelected = !c.groups || c.groups.length === 0 || scoped.length === all.length;
+        const expected = Passive.scopeExpected();
+        const nGroups = Passive.maxGroups();
+        const allGroups = !(c.groups && c.groups.length);
+        const loadingN = selIds.filter(id => DataStore.loadingIds[id]).length;
+        const failedMsgs = selIds.filter(id => DataStore.failed[id]).map(id => DataStore.failed[id]);
         const rate = Number(Storage.getSettings().rate) || 1.0;
         const q = v => typeof v === 'string' ? `'${v}'` : v;
         const seg = (key, items) => items.map(it =>
@@ -993,7 +1174,7 @@
         return `
           <div class="space-y-5">
             <div>
-              <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">🎧 Nghe Thụ Động (Tổng Hợp ${all.length} Từ)</h2>
+              <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">🎧 Nghe Thụ Động (Tổng Hợp ${expected} Từ)</h2>
               <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Bật lên rồi đi bộ, làm việc nhà hoặc nghe trước khi ngủ. Không cần chạm vào màn hình.</p>
             </div>
 
@@ -1006,13 +1187,13 @@
                       <span id="ps-eq" class="eq"><i></i><i></i><i></i><i></i></span>
                       <span id="ps-state">Sẵn sàng</span>
                     </div>
-                    <span id="ps-counter" class="text-xs font-bold text-indigo-100 glass rounded-full px-3 py-1">0 / ${scoped.length}</span>
+                    <span id="ps-counter" class="text-xs font-bold text-indigo-100 glass rounded-full px-3 py-1">0 / ${expected}</span>
                   </div>
 
                   <div class="text-center mt-5 mb-4 min-h-[8.5rem] flex flex-col items-center justify-center">
                     <div id="ps-hanzi" class="hanzi-text text-6xl sm:text-7xl font-black leading-tight">🎧</div>
                     <div id="ps-pinyin" class="text-lg font-semibold text-indigo-200 mt-1 min-h-[1.75rem]"></div>
-                    <div id="ps-meaning" class="text-sm text-indigo-100/90 mt-1 px-2">Nhấn ▶ để bắt đầu · ${scoped.length} từ</div>
+                    <div id="ps-meaning" class="text-sm text-indigo-100/90 mt-1 px-2">Nhấn ▶ để bắt đầu · ${expected} từ</div>
                   </div>
 
                   <div id="ps-caption" class="hanzi-text glass rounded-2xl px-4 py-3 text-sm text-amber-200 font-semibold text-center min-h-[3rem] flex items-center justify-center leading-snug">
@@ -1053,13 +1234,23 @@
 
                 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 space-y-5">
                   <div>
-                    <div class="opt-label mb-2">2 · Phạm vi từ</div>
-                    <div class="flex flex-wrap gap-2">
-                      <button class="chip ${allSelected ? 'on' : ''}" onclick="Passive.selectAllGroups()">Tất cả ${all.length} từ</button>
-                      ${groups.map((g, i) => {
-                        const on = !allSelected && scoped.some(x => x.gid === g.id);
-                        return `<button class="chip ${on ? 'on' : ''}" onclick="Passive.toggleGroup('${g.id}')">Nhóm ${i + 1} <span class="opacity-70">(${g.words.length})</span></button>`;
-                      }).join('')}
+                    <div class="opt-label mb-2">2 · Phạm vi nghe</div>
+                    <div class="space-y-2.5">
+                      <div class="flex gap-2 overflow-x-auto pb-1">
+                        ${levels.map(lv => `<button class="chip shrink-0 ${lv === level ? 'on' : ''}" onclick="Passive.setLevel('${lv}')">${lv}</button>`).join('')}
+                      </div>
+                      <div class="flex flex-wrap gap-2 max-h-44 overflow-y-auto pr-1">
+                        <button class="chip ${allLessonsSel ? 'on' : ''}" onclick="Passive.selectAllLessons()">Tất cả bài (${lvLessons.length})</button>
+                        ${lvLessons.map((m, i) => `<button class="chip ${!allLessonsSel && selIds.includes(m.id) ? 'on' : ''}" title="${Renderer.escapeHtml(m.title)}" onclick="Passive.toggleLesson('${m.id}')">Bài ${m.number || i + 1}</button>`).join('')}
+                      </div>
+                      <div class="flex flex-wrap gap-2">
+                        <button class="chip ${allGroups ? 'on' : ''}" onclick="Passive.selectAllGroups()">Tất cả nhóm</button>
+                        ${Array.from({ length: nGroups }, (_, i) => `<button class="chip ${!allGroups && c.groups.includes(i) ? 'on' : ''}" onclick="Passive.toggleGroupIdx(${i})">Nhóm ${i + 1}</button>`).join('')}
+                      </div>
+                      <p class="text-xs text-slate-500 dark:text-slate-400">
+                        ${loadingN ? `⏳ Đang tải ${loadingN} bài...` : `Sẽ nghe ${expected} từ từ ${selIds.length} bài của ${level}.`}
+                      </p>
+                      ${failedMsgs.length ? `<p class="text-xs text-rose-600 dark:text-rose-400">⚠ ${Renderer.escapeHtml(failedMsgs[0])}</p>` : ''}
                     </div>
                   </div>
 
@@ -1097,12 +1288,13 @@
                     <span class="text-[11px] text-slate-500">Chạm một từ để nghe từ đó</span>
                   </div>
                   <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    ${all.map(x => `
-                      <button id="ps-w-${x.w.id}" class="ps-word ${scopedIds.has(x.w.id) ? '' : 'dim'}" onclick="Passive.jump('${x.w.id}')">
+                    ${scoped.slice(0, 72).map(x => `
+                      <button id="ps-w-${x.w.id}" class="ps-word" onclick="Passive.jump('${x.w.id}')">
                         <div class="hanzi-text text-base font-black text-slate-900 dark:text-white">${this.escapeHtml(x.w.hanzi)}</div>
                         <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${this.escapeHtml(x.w.pinyin)} · ${this.escapeHtml(x.w.coreMeaning)}</div>
                       </button>`).join('')}
                   </div>
+                  ${scoped.length > 72 ? `<p class="text-xs text-slate-500 mt-3">Hiển thị 72 từ đầu. Toàn bộ ${scoped.length} từ vẫn được phát.</p>` : ''}
                 </div>
               </section>
             </div>
@@ -1134,7 +1326,7 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">${curLesson.level} • ${curLesson.title}</span>
+                  <button onclick="Router.navigate('home')" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider hover:underline text-left">◀ Thư viện · ${curLesson.level} • ${curLesson.title}</button>
                   <h3 class="text-base font-bold text-slate-900 dark:text-white">${curGroup.title}</h3>
                 </div>
                 <!-- Dropdown đổi nhóm nhanh -->
@@ -1389,7 +1581,7 @@
         return `
           <div class="space-y-6">
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-              <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">${curLesson.level} • ${curLesson.title}</span>
+              <button onclick="Router.navigate('home')" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider hover:underline text-left">◀ Thư viện · ${curLesson.level} • ${curLesson.title}</button>
               <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1">Luyện Tập: ${curGroup.title}</h2>
               <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                 Làm bài trắc nghiệm kiểm tra phản xạ và thực hành tự đặt câu với 3 tầng trợ giúp.
@@ -1525,7 +1717,7 @@
         return `
           <div class="space-y-6">
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-              <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">${curLesson.level} • ${curLesson.title}</span>
+              <button onclick="Router.navigate('home')" class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider hover:underline text-left">◀ Thư viện · ${curLesson.level} • ${curLesson.title}</button>
               <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1">🔄 Ôn Tập Ngắt Quãng (Mốc 1 – 3 – 7 Ngày)</h2>
               <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                 Tự suy nghĩ và trả lời trước, sau đó bấm mở khóa đáp án để đối chiếu và nghe lời giảng.
@@ -1611,7 +1803,8 @@
               <div class="relative">
                 <input type="text" oninput="Renderer.onSearchInput(this.value)" value="${Renderer.escapeHtml(AppStore.searchQuery)}" placeholder="Nhập chữ Hán (右, 开车), Pinyin (kaiche) hoặc nghĩa..." class="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
-              <div class="text-xs text-slate-400">Tìm thấy ${allWords.length} từ vựng từ học liệu.</div>
+              <div class="text-xs text-slate-400">Tìm thấy ${allWords.length} từ vựng trong ${AppStore.lessons.length} bài đã mở.</div>
+              ${DataStore.manifest.length > AppStore.lessons.length ? `<div class="text-xs text-amber-600 dark:text-amber-400">Còn ${DataStore.manifest.length - AppStore.lessons.length} bài chưa mở. <button class="underline font-bold" onclick="Renderer.loadAllLessons()">Tải tất cả để tra cứu đầy đủ</button></div>` : ''}
             </div>
 
             <div class="grid gap-3">
@@ -1653,6 +1846,14 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
               <h2 class="text-xl font-bold text-slate-900 dark:text-white">Cài Đặt & Dữ Liệu</h2>
               <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Tùy chỉnh giọng đọc thiết bị, giao diện và sao lưu tiến trình.</p>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
+              <h3 class="font-bold text-sm text-slate-900 dark:text-white">Học liệu</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">${DataStore.levels().length} cấp độ • ${DataStore.manifest.length} bài • ${DataStore.totalWords()} từ. Đã mở trong phiên này: ${AppStore.lessons.length} bài.</p>
+              ${Object.keys(DataStore.failed).length ? `<p class="text-xs text-rose-600">⚠ ${Object.keys(DataStore.failed).length} bài tải lỗi: ${Object.keys(DataStore.failed).map(k => Renderer.escapeHtml(k)).join(', ')}</p>` : ''}
+              <button onclick="Renderer.loadAllLessons()" class="chip">⬇ Tải tất cả bài</button>
+              <span id="load-all-status" class="text-xs text-slate-500 ml-2"></span>
             </div>
 
             <!-- Tùy chỉnh giọng đọc TTS -->
@@ -1910,7 +2111,7 @@
     // 5B. TRÌNH PHÁT NGHE THỤ ĐỘNG (PASSIVE LISTENING ENGINE)
     const PassiveStore = {
       KEY: 'HSK_PASSIVE_CFG_V1',
-      defaults: { mode: 2, groups: [], repeat: 2, pause: 1000, order: 'seq', sleep: 'end', wake: true },
+      defaults: { mode: 2, level: '', lessons: [], groups: [], repeat: 2, pause: 1000, order: 'seq', sleep: 'end', wake: true },
       get() {
         try {
           const raw = localStorage.getItem(this.KEY);
@@ -1939,28 +2140,67 @@
 
       init() {
         this.cfg = PassiveStore.get();
+        this.cfg.groups = (this.cfg.groups || []).filter(x => typeof x === 'number');
+        if (!Array.isArray(this.cfg.lessons)) this.cfg.lessons = [];
         document.addEventListener('visibilitychange', () => {
           if (document.visibilityState === 'visible' && this.playing) this.acquireWake();
         });
       },
 
       // ---------- Dữ liệu ----------
-      allWords() {
-        const out = [];
-        AppStore.lessons.forEach(l => l.groups.forEach(g => g.words.forEach(w => out.push({ w, gid: g.id }))));
-        return out;
+      level() {
+        const lv = DataStore.levels();
+        if (this.cfg.level && lv.includes(this.cfg.level)) return this.cfg.level;
+        const c = AppStore.currentLesson;
+        if (c && lv.includes(c.level)) return c.level;
+        return lv[0] || '';
       },
-      groupList() {
-        const arr = [];
-        AppStore.lessons.forEach(l => l.groups.forEach(g => arr.push(g)));
-        return arr;
+      scopeLessonIds() {
+        const all = DataStore.lessonsOf(this.level()).map(m => m.id);
+        const sel = (this.cfg.lessons || []).filter(id => all.includes(id));
+        return sel.length ? sel : all;
       },
       scopedWords() {
-        const all = this.allWords();
-        const sel = this.cfg.groups;
-        if (!sel || !sel.length) return all;
-        const f = all.filter(x => sel.includes(x.gid));
-        return f.length ? f : all;
+        const out = [];
+        const gsel = this.cfg.groups || [];
+        this.scopeLessonIds().forEach(id => {
+          const l = DataStore.getLoaded(id);
+          if (!l) return;
+          l.groups.forEach((g, gi) => {
+            if (gsel.length && !gsel.includes(gi)) return;
+            g.words.forEach(w => out.push({ w, gid: g.id, lessonId: l.id }));
+          });
+        });
+        return out;
+      },
+      scopeExpected() {
+        const gsel = this.cfg.groups || [];
+        let n = 0;
+        this.scopeLessonIds().forEach(id => {
+          const l = DataStore.getLoaded(id);
+          if (l) l.groups.forEach((g, gi) => { if (!gsel.length || gsel.includes(gi)) n += g.words.length; });
+          else { const e = DataStore.entry(id); if (e) n += e.words || 0; }
+        });
+        return n;
+      },
+      maxGroups() {
+        let m = 0;
+        this.scopeLessonIds().forEach(id => { const l = DataStore.getLoaded(id); if (l) m = Math.max(m, l.groups.length); });
+        return m || 4;
+      },
+      autoLoad() {
+        const pend = DataStore.unloadedIds(this.scopeLessonIds()).filter(id => !DataStore.failed[id] && !DataStore.loadingIds[id]);
+        if (!pend.length) return;
+        DataStore.ensure(pend).then(() => { if (AppStore.currentTab === 'passive') { Renderer.renderCurrentView(); } })
+          .catch(() => { if (AppStore.currentTab === 'passive') Renderer.renderCurrentView(); });
+        if (AppStore.currentTab === 'passive') setTimeout(() => Renderer.renderCurrentView(), 0);
+      },
+      setScopeToLesson(id) {
+        const e = DataStore.entry(id);
+        if (e) this.cfg.level = e.level;
+        this.cfg.lessons = [id];
+        this.cfg.groups = [];
+        PassiveStore.save(this.cfg);
       },
       buildPlaylist() {
         const list = this.scopedWords().slice();
@@ -2024,6 +2264,20 @@
         if (!('speechSynthesis' in window)) { this.setState('Thiết bị không hỗ trợ đọc giọng nói.'); return; }
         TTS.stop();
         this.statusText = '';
+        const pend = DataStore.unloadedIds(this.scopeLessonIds());
+        if (pend.length) {
+          this.halt(true);
+          this.setState('Đang tải bài học...');
+          this.syncUI();
+          DataStore.ensure(pend)
+            .then(() => {
+              Renderer.renderCurrentView();
+              if (DataStore.unloadedIds(this.scopeLessonIds()).length) { this.setState('Không tải được bài học.'); this.syncUI(); return; }
+              this.start(fromWordId);
+            })
+            .catch(e => { this.setState('Lỗi tải bài: ' + e.message); Renderer.renderCurrentView(); });
+          return;
+        }
         this.clearTimers();
         this.token++;
         this.playlist = this.buildPlaylist();
@@ -2186,21 +2440,40 @@
         Renderer.renderCurrentView();
         this.syncUI();
       },
+      setLevel(lv) {
+        this.cfg.level = lv; this.cfg.lessons = []; this.cfg.groups = [];
+        PassiveStore.save(this.cfg);
+        this.afterScopeChange();
+      },
+      selectAllLessons() {
+        this.cfg.lessons = [];
+        PassiveStore.save(this.cfg);
+        this.afterScopeChange();
+      },
+      toggleLesson(id) {
+        const all = DataStore.lessonsOf(this.level()).map(m => m.id);
+        let sel = (this.cfg.lessons || []).filter(x => all.includes(x));
+        if (sel.length === 0) sel = [id];
+        else if (sel.includes(id)) sel = sel.filter(x => x !== id);
+        else sel.push(id);
+        if (sel.length === 0 || sel.length === all.length) sel = [];
+        this.cfg.lessons = sel;
+        PassiveStore.save(this.cfg);
+        this.afterScopeChange();
+      },
       selectAllGroups() {
         this.cfg.groups = [];
         PassiveStore.save(this.cfg);
         this.afterScopeChange();
       },
-      toggleGroup(gid) {
-        const all = this.allWords();
-        const allIds = [...new Set(all.map(x => x.gid))];
-        let sel = (this.cfg.groups && this.cfg.groups.length) ? this.cfg.groups.slice() : [];
-        const wasAll = sel.length === 0;
-        if (wasAll) sel = [gid];
-        else if (sel.includes(gid)) sel = sel.filter(x => x !== gid);
-        else sel.push(gid);
-        if (sel.length === 0 || sel.length === allIds.length) sel = [];
-        this.cfg.groups = sel;
+      toggleGroupIdx(i) {
+        const total = this.maxGroups();
+        let sel = (this.cfg.groups || []).slice();
+        if (sel.length === 0) sel = [i];
+        else if (sel.includes(i)) sel = sel.filter(x => x !== i);
+        else sel.push(i);
+        if (sel.length === 0 || sel.length === total) sel = [];
+        this.cfg.groups = sel.sort((a, b) => a - b);
         PassiveStore.save(this.cfg);
         this.afterScopeChange();
       },
@@ -2208,6 +2481,7 @@
         if (this.playing) this.start();
         Renderer.renderCurrentView();
         this.syncUI();
+        this.autoLoad();
       },
       setRate(r) {
         const s = Storage.getSettings();
@@ -2260,7 +2534,7 @@
       resetDisplay() {
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
         set('ps-hanzi', '🎧'); set('ps-pinyin', '');
-        set('ps-meaning', `Nhấn ▶ để bắt đầu · ${this.scopedWords().length} từ`);
+        set('ps-meaning', `Nhấn ▶ để bắt đầu · ${this.scopeExpected()} từ`);
         set('ps-caption', 'Lời đang đọc sẽ hiện ở đây');
         const bar = document.getElementById('ps-progress'); if (bar) bar.style.width = '0%';
         this.syncUI();
@@ -2293,7 +2567,7 @@
           set('ps-meaning', entry.w.coreMeaning);
           set('ps-counter', `${this.pos + 1} / ${this.playlist.length}`);
         } else {
-          set('ps-counter', `0 / ${this.scopedWords().length}`);
+          set('ps-counter', `0 / ${this.scopeExpected()}`);
         }
 
         document.querySelectorAll('.ps-word').forEach(el => el.classList.remove('cur'));
@@ -2307,7 +2581,7 @@
     };
 
     // 6. KHỞI TẠO ỨNG DỤNG (APP BOOTSTRAP)
-    function initializeApp() {
+    async function initializeApp() {
       TTS.init();
       Passive.init();
 
@@ -2315,28 +2589,30 @@
       Renderer.applyTheme(settings.theme);
       document.documentElement.style.setProperty('--app-font-size', `${settings.fontSize || '16'}px`);
 
-      const rawLessons = DataNormalizer.findRawLessons();
-      if (rawLessons && Array.isArray(rawLessons) && rawLessons.length > 0) {
-        AppStore.lessons = rawLessons.map((l, idx) => DataNormalizer.normalizeLesson(l, idx)).filter(Boolean);
+      DataStore.init();
+
+      const progress = Storage.getProgress();
+      const lastId = progress.lastLessonId;
+      const tabAfter = 'home';
+
+      Router.navigate(tabAfter);
+
+      // Khôi phục bài đang học dở (tải nền)
+      if (lastId && DataStore.entry(lastId)) {
+        try {
+          await DataStore.load(lastId);
+          const l = DataStore.getLoaded(lastId);
+          if (l && !AppStore.currentLesson) {
+            AppStore.currentLesson = l;
+            AppStore.currentGroup = l.groups.find(g => g.id === progress.lastGroupId) || l.groups[0] || null;
+            if (AppStore.currentGroup) {
+              AppStore.currentWord = AppStore.currentGroup.words.find(w => w.id === progress.lastWordId) || AppStore.currentGroup.words[0] || null;
+            }
+            Router.updateTopIndicator();
+            if (AppStore.currentTab === 'home') Renderer.renderCurrentView();
+          }
+        } catch (e) { console.warn('Không khôi phục được bài cũ:', e.message); }
       }
-
-      if (AppStore.lessons.length > 0) {
-        const progress = Storage.getProgress();
-        let targetLesson = AppStore.lessons.find(l => l.id === progress.lastLessonId) || AppStore.lessons[0];
-        AppStore.currentLesson = targetLesson;
-
-        let targetGroup = targetLesson.groups.find(g => g.id === progress.lastGroupId) || targetLesson.groups[0];
-        AppStore.currentGroup = targetGroup;
-
-        if (targetGroup) {
-          AppStore.currentWord = targetGroup.words.find(w => w.id === progress.lastWordId) || targetGroup.words[0];
-        }
-
-        const topInd = document.getElementById('top-lesson-indicator');
-        if (topInd) topInd.textContent = `${targetLesson.level} • ${targetLesson.title}`;
-      }
-
-      Router.navigate('home');
     }
 
     window.addEventListener('DOMContentLoaded', initializeApp);
