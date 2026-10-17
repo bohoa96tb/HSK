@@ -9,8 +9,8 @@
 // =============================================================================
 const LESSON_NUMBER = 16;
 const LESSON_LEVEL = "HSK1";
-const LESSON_ID = `bai-16{LESSON_NUMBER}`;
-const LESSON_TITLE = `Bài 16{LESSON_NUMBER}: Giao Tiếp Cơ Bản & Định Hướng Không Gian`;
+const LESSON_ID = `bai-${LESSON_NUMBER}`;
+const LESSON_TITLE = `Bài ${LESSON_NUMBER}: Giao Tiếp Cơ Bản & Định Hướng Không Gian`;
 
 // Khai báo biến top-level tương thích với window.ALL_LESSONS của ứng dụng
 const ALL_LESSONS = [
@@ -981,11 +981,8 @@ const ALL_LESSONS = [
             ]
           }
         ]
-      }
+      },
       // [Phần tiếp theo: Nhóm 2, Nhóm 3, Nhóm 4 sẽ được bổ sung lần lượt tại các lượt phản hồi kế tiếp]
-    ]
-  }
-];
       // =======================================================================
       // NHÓM 2: HÀNH ĐỘNG SONG SONG, ĐÁNH GIÁ & ĐỜI SỐNG HỌC ĐƯỜNG (TỪ 07 - 12)
       // =======================================================================
@@ -1920,7 +1917,7 @@ const ALL_LESSONS = [
             ]
           }
         ]
-      }
+      },
       // [Phần tiếp theo: Nhóm 3 (Từ 13 đến 18) và Nhóm 4 (Từ 19 đến 24) sẽ được bổ sung ở lượt tiếp theo]
       // =======================================================================
       // NHÓM 3: THỜI GIAN, XÃ HỘI, THẨM MỸ & GIA ĐÌNH (TỪ 13 - 18)
@@ -2832,7 +2829,7 @@ const ALL_LESSONS = [
             ]
           }
         ]
-      }
+      },
       // [Phần tiếp theo: Nhóm 4 (Từ 19 đến 24: 打球, 路口, 读书, 姐, 车站, 打开) sẽ được bổ sung ở lượt tiếp theo để đóng hoàn chỉnh file]
       // =======================================================================
       // NHÓM 4: THỂ THAO, GIAO THÔNG, HỌC TẬP & HÀNH ĐỘNG CỤ THỂ (TỪ 19 - 24)
