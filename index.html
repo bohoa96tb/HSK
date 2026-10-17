@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HSK1-HSK2 Audio Interactive Learning & Passive Studio</title>
+  <title>HSK Audio Interactive Learning & Passive Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
@@ -12,7 +12,7 @@
     .target-hl { color: #d97706; font-weight: 900; text-decoration: underline; text-underline-offset: 6px; }
     .active-card { ring: 3px solid #4f46e5; background-color: #eef2ff !important; }
   </style>
-  <!-- SAU NÀY DÁN MÃ GOOGLE ADSENSE AUTO ADS VÀO NGAY DƯỚI DÒNG NÀY -->
+  <!-- SAU NÀY DÁN MÃ GOOGLE ADSENSE AUTO ADS VÀO NGAY DƯỚI DÒNG NÀY NẾU CÓ -->
 </head>
 <body class="text-slate-800 pb-28">
 
@@ -21,33 +21,49 @@
     <div class="max-w-6xl mx-auto px-4 py-3 space-y-2.5">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
-          <span class="bg-indigo-600 text-white font-bold px-2.5 py-1 rounded-lg text-sm">HSK 1–2</span>
+          <span id="badge-current-level" class="bg-indigo-600 text-white font-bold px-2.5 py-1 rounded-lg text-sm shadow-sm">HSK</span>
           <h1 class="font-bold text-slate-900 text-base sm:text-lg">Học Tiếng Trung Qua Audio Giảng Bài</h1>
         </div>
 
-        <!-- THANH CHỌN BÀI HỌC MỖI NGÀY (TỰ ĐỘNG CẬP NHẬT TỪ LESSONS.JS) -->
-        <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl">
-          <label for="lesson-select" class="text-xs font-bold text-indigo-900 uppercase">📚 Chọn bài:</label>
-          <select id="lesson-select" onchange="switchLesson(this.value)" class="bg-white border border-indigo-300 text-indigo-950 font-bold text-xs sm:text-sm rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          </select>
+        <!-- BỘ LỌC 2 CẤP ĐỘ: CẤP ĐỘ HSK & DANH SÁCH BÀI HỌC TỰ ĐỘNG -->
+        <div class="flex flex-wrap items-center gap-1.5 bg-indigo-50 border border-indigo-200 p-1.5 rounded-xl shadow-sm">
+          <!-- 1. Bộ lọc cấp độ HSK -->
+          <div class="flex items-center gap-1.5 px-1.5">
+            <label for="level-select" class="text-xs font-bold text-indigo-900 uppercase">🎯 HSK:</label>
+            <select id="level-select" onchange="onSelectLevel(this.value)" class="bg-white border border-indigo-300 text-indigo-950 font-bold text-xs sm:text-sm rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">Tất cả</option>
+              <option value="HSK1" selected>HSK 1</option>
+              <option value="HSK2">HSK 2</option>
+              <option value="HSK3">HSK 3</option>
+              <option value="HSK4">HSK 4</option>
+              <option value="HSK5">HSK 5</option>
+            </select>
+          </div>
+
+          <!-- 2. Danh sách bài học tự động đổi theo cấp độ -->
+          <div class="flex items-center gap-1.5 px-1.5 border-l border-indigo-200">
+            <label for="lesson-select" class="text-xs font-bold text-indigo-900 uppercase">📚 Bài:</label>
+            <select id="lesson-select" onchange="switchLesson(this.value)" class="bg-white border border-indigo-300 text-indigo-950 font-bold text-xs sm:text-sm rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 max-w-[220px]">
+            </select>
+          </div>
         </div>
       </div>
 
       <!-- MENU CHỌN NHÓM & CHẾ ĐỘ HỌC -->
       <nav id="main-nav" class="flex flex-wrap gap-1.5 text-xs sm:text-sm font-medium pt-1 border-t border-slate-100">
-        <button onclick="switchTab('guide')" id="tab-guide" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white">📖 Hướng dẫn</button>
+        <button onclick="switchTab('guide')" id="tab-guide" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-semibold shadow">📖 Hướng dẫn</button>
         <button onclick="switchTab('g1')" id="tab-g1" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Nhóm 1</button>
         <button onclick="switchTab('g2')" id="tab-g2" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Nhóm 2</button>
         <button onclick="switchTab('g3')" id="tab-g3" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Nhóm 3</button>
         <button onclick="switchTab('g4')" id="tab-g4" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Nhóm 4</button>
         <button onclick="switchTab('review')" id="tab-review" class="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-900 hover:bg-amber-200">🔄 Ôn tập (1-3-7 ngày)</button>
-        <button onclick="switchTab('passive')" id="tab-passive" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">🎧 Nghe Thụ Động (24 Từ)</button>
+        <button onclick="switchTab('passive')" id="tab-passive" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">🎧 Nghe Thụ Động</button>
         <button onclick="switchTab('progress')" id="tab-progress" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">📊 Tiến độ</button>
       </nav>
     </div>
   </header>
 
-  <!-- KHUNG ĐẶT BANNER QUẢNG CÁO TÙY CHỌN (ẨN MẶC ĐỊNH KHI CHƯA CÓ MÃ) -->
+  <!-- KHUNG HIỂN THỊ BANNER QUẢNG CÁO TÙY CHỌN -->
   <div id="ad-banner-top" class="max-w-5xl mx-auto px-4 mt-3 hidden">
     <div class="bg-slate-100 border border-dashed border-slate-300 rounded-xl p-3 text-center text-xs text-slate-400">
       Khu vực hiển thị Quảng cáo (AdSense)
@@ -81,21 +97,27 @@
     </div>
   </footer>
 
-  <!-- 1. NẠP KHO DỮ LIỆU BÀI HỌC TỪ FILE LESSONS.JS -->
+  <!-- 1. NẠP DỮ LIỆU TỪ LESSONS.JS -->
   <script src="lessons.js"></script>
 
-  <!-- 2. BỘ MÁY XỬ LÝ GIAO DIỆN & ÂM THANH -->
+  <!-- 2. BỘ MÁY XỬ LÝ LOGIC, ĐA CẤP ĐỘ & ÂM THANH -->
   <script>
-    // Hỗ trợ tương thích: Lấy danh sách bài từ ALL_LESSONS trong lessons.js
-    const LESSONS_LIST = (typeof ALL_LESSONS !== 'undefined' && ALL_LESSONS.length > 0)
+    // Chuẩn hóa danh sách bài học và tự động gán level mặc định là HSK1 nếu bài chưa có thuộc tính level
+    const RAW_LESSONS = (typeof ALL_LESSONS !== 'undefined' && ALL_LESSONS.length > 0)
       ? ALL_LESSONS
-      : (typeof APP_DATA !== 'undefined' ? [{ id: "lesson-1", title: "Bài 1: 24 Từ Vựng Đầu Tiên", groups: APP_DATA.groups }] : []);
+      : (typeof APP_DATA !== 'undefined' ? [{ id: "lesson-1", level: "HSK1", title: "Bài 1: 24 Từ Vựng Đầu Tiên", groups: APP_DATA.groups }] : []);
 
-    let CURRENT_LESSON = LESSONS_LIST[0] || { id: "empty", title: "Chưa có dữ liệu", groups: [] };
+    const LESSONS_LIST = RAW_LESSONS.map(l => ({
+      ...l,
+      level: (l.level || "HSK1").toUpperCase()
+    }));
+
+    let CURRENT_LEVEL = "HSK1";
+    let CURRENT_LESSON = LESSONS_LIST.find(l => l.level === CURRENT_LEVEL) || LESSONS_LIST[0] || { id: "empty", level: "HSK1", title: "Chưa có dữ liệu", groups: [] };
     let APP_DATA_ACTIVE = { groups: CURRENT_LESSON.groups || [] };
 
     // =========================================================================
-    // BỘ MÁY ÂM THANH SONG NGỮ (DUAL-LANGUAGE TTS QUEUE ENGINE)
+    // BỘ MÁY PHÁT ÂM SONG NGỮ (DUAL-LANGUAGE TTS QUEUE ENGINE)
     // =========================================================================
     const TTS = {
       queue: [],
@@ -222,7 +244,7 @@
     window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 
     // =========================================================================
-    // QUẢN LÝ TRẠNG THÁI (STATE MANAGEMENT) & TIẾN ĐỘ
+    // QUẢN LÝ TRẠNG THÁI (STATE) & TIẾN ĐỘ
     // =========================================================================
     const STATE = {
       currentLessonId: CURRENT_LESSON.id,
@@ -250,12 +272,48 @@
       }
     };
 
-    function initLessonSelector() {
+    // =========================================================================
+    // ĐIỀU HƯỚNG BỘ LỌC CẤP ĐỘ & BÀI HỌC
+    // =========================================================================
+    function updateLessonDropdown() {
       const selectEl = document.getElementById('lesson-select');
       if (!selectEl) return;
-      selectEl.innerHTML = LESSONS_LIST.map(l =>
+
+      const filtered = (CURRENT_LEVEL === "ALL")
+        ? LESSONS_LIST
+        : LESSONS_LIST.filter(l => l.level === CURRENT_LEVEL);
+
+      if (filtered.length === 0) {
+        selectEl.innerHTML = `<option value="">(Chưa có bài nào)</option>`;
+        return;
+      }
+
+      selectEl.innerHTML = filtered.map(l =>
         `<option value="${l.id}" ${l.id === STATE.currentLessonId ? 'selected' : ''}>${l.title}</option>`
       ).join('');
+
+      const existsInFiltered = filtered.some(l => l.id === STATE.currentLessonId);
+      if (!existsInFiltered) {
+        switchLesson(filtered[0].id);
+      }
+    }
+
+    function onSelectLevel(level) {
+      CURRENT_LEVEL = level;
+      const badge = document.getElementById('badge-current-level');
+      if (badge) badge.textContent = (level === 'ALL' ? 'HSK' : level);
+      updateLessonDropdown();
+    }
+
+    function initLessonSelector() {
+      if (CURRENT_LESSON && CURRENT_LESSON.level) {
+        CURRENT_LEVEL = CURRENT_LESSON.level;
+        const lvlEl = document.getElementById('level-select');
+        if (lvlEl) lvlEl.value = CURRENT_LEVEL;
+        const badge = document.getElementById('badge-current-level');
+        if (badge) badge.textContent = CURRENT_LEVEL;
+      }
+      updateLessonDropdown();
     }
 
     function switchLesson(lessonId) {
@@ -266,6 +324,11 @@
       STATE.currentLessonId = found.id;
       APP_DATA_ACTIVE = { groups: found.groups || [] };
       STATE.selectedWordIndexByGroup = { g1: 0, g2: 0, g3: 0, g4: 0 };
+
+      // Cập nhật nhãn cấp độ ở đầu trang
+      const badge = document.getElementById('badge-current-level');
+      if (badge && found.level) badge.textContent = found.level;
+
       renderApp();
     }
 
@@ -305,7 +368,7 @@
     function renderApp() {
       const container = document.getElementById('app-content');
       if (!APP_DATA_ACTIVE.groups || APP_DATA_ACTIVE.groups.length === 0) {
-        container.innerHTML = `<div class="p-8 bg-white rounded-2xl text-center text-rose-600 font-bold">Không tìm thấy dữ liệu bài học. Hãy kiểm tra lại file lessons.js!</div>`;
+        container.innerHTML = `<div class="p-8 bg-white rounded-2xl text-center text-rose-600 font-bold border border-rose-200">Không tìm thấy dữ liệu bài học. Hãy kiểm tra lại file lessons.js!</div>`;
         return;
       }
       if (STATE.currentTab === 'guide') {
@@ -328,10 +391,10 @@
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
           <div class="border-b border-slate-100 pb-4 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">${CURRENT_LESSON.title}</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">${CURRENT_LESSON.level || 'HSK'} • ${CURRENT_LESSON.title}</span>
               <h2 class="text-2xl font-bold text-slate-900 mt-1">Hướng Dẫn Học Tiếng Trung Qua Audio Tương Tác</h2>
             </div>
-            <button onclick="TTS.playQueue([{lang:'vi-VN', text:'Chào mừng bạn đến với ứng dụng học tiếng Trung qua Audio cấp độ HSK 1 và HSK 2. Hãy chọn bài học ở góc trên và mở từng mục để nghe giáo viên giảng bài trực tiếp.'}], 'Lời chào mở đầu')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow">
+            <button onclick="TTS.playQueue([{lang:'vi-VN', text:'Chào mừng bạn đến với ứng dụng học tiếng Trung qua Audio. Hãy chọn cấp độ và bài học ở góc trên để bắt đầu nghe giảng.'}], 'Lời chào mở đầu')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow">
               🔊 Nghe giới thiệu phương pháp
             </button>
           </div>
@@ -372,7 +435,7 @@
     function renderGroupTab(groupId) {
       const group = APP_DATA_ACTIVE.groups.find(g => g.id === groupId);
       if (!group) {
-        return `<div class="bg-white rounded-2xl shadow-sm border border-amber-200 p-8 text-center">Nhóm này chưa có dữ liệu trong bài học hiện tại.</div>`;
+        return `<div class="bg-white rounded-2xl shadow-sm border border-amber-200 p-8 text-center text-slate-600">Nhóm này chưa có dữ liệu trong bài học hiện tại.</div>`;
       }
 
       const selectedIdx = STATE.selectedWordIndexByGroup[groupId] || 0;
@@ -384,7 +447,7 @@
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
               <div>
-                <span class="text-xs font-bold text-indigo-600 uppercase">${CURRENT_LESSON.title}</span>
+                <span class="text-xs font-bold text-indigo-600 uppercase">${CURRENT_LESSON.level || 'HSK'} • ${CURRENT_LESSON.title}</span>
                 <h2 class="text-xl font-bold text-slate-900">${group.title}</h2>
                 <p class="text-xs sm:text-sm text-slate-500">${group.desc}</p>
               </div>
@@ -747,7 +810,7 @@
       return `
         <div class="space-y-6">
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <span class="text-xs font-bold text-indigo-600 uppercase">${CURRENT_LESSON.title}</span>
+            <span class="text-xs font-bold text-indigo-600 uppercase">${CURRENT_LESSON.level || 'HSK'} • ${CURRENT_LESSON.title}</span>
             <h2 class="text-xl font-bold text-slate-900">🔄 Hệ Thống Ôn Tập Ngắt Quãng (1 – 3 – 7 Ngày)</h2>
             <p class="text-sm text-slate-600 mt-1">Làm câu hỏi kiểm tra và tự trả lời trước, sau đó bấm <strong>"Nộp & Xem đáp án"</strong> để mở khóa lời giải và Audio.</p>
           </div>
@@ -809,7 +872,7 @@
         <div class="space-y-6">
           <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-10 shadow-xl border border-indigo-800/50 text-center space-y-5">
             <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-indigo-300">
-              <span class="px-3 py-1 rounded-full bg-indigo-900/80 border border-indigo-700">🎧 ${CURRENT_LESSON.title} — PASSIVE STUDIO</span>
+              <span class="px-3 py-1 rounded-full bg-indigo-900/80 border border-indigo-700">🎧 ${CURRENT_LESSON.level || 'HSK'} • ${CURRENT_LESSON.title} — PASSIVE STUDIO</span>
               <span id="passive-progress-badge" class="font-bold text-amber-300">${p.currentWord ? `Đang phát: Từ #${p.currentWord.index} (${p.currentWord.hanzi})` : 'Chưa phát'}</span>
             </div>
 
@@ -1008,7 +1071,7 @@
               if (hEl) hEl.textContent = item.metaWord.hanzi;
               if (mEl) mEl.textContent = item.metaWord.coreMeaning;
               if (sEl) sEl.innerHTML = highlightTargetWord(item.metaSentence || "", item.metaWord.hanzi);
-              if (bEl) bEl.textContent = `Đang phát: Từ #${item.metaWord.index}/24 (${item.metaWord.hanzi})`;
+              if (bEl) bEl.textContent = `Đang phát: Từ #${item.metaWord.index} (${item.metaWord.hanzi})`;
             }
           },
           () => {
@@ -1055,7 +1118,7 @@
       return `
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
           <div>
-            <span class="text-xs font-bold text-indigo-600 uppercase">${CURRENT_LESSON.title}</span>
+            <span class="text-xs font-bold text-indigo-600 uppercase">${CURRENT_LESSON.level || 'HSK'} • ${CURRENT_LESSON.title}</span>
             <h2 class="text-xl font-bold text-slate-900">📊 Tiến Độ Học Tập & Thành Thạo</h2>
             <p class="text-sm text-slate-600 mt-1">Quy tắc hệ thống: Chỉ đánh dấu <strong>"Đã thành thạo"</strong> sau khi bạn hoàn thành đầy đủ Bài tập nhóm.</p>
           </div>
