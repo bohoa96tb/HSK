@@ -2,8 +2,16 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>HSK Multi-Level Audio Learning Studio</title>
+  
+  <!-- CẤU HÌNH GIAO DIỆN CHUẨN APP TRÊN ĐIỆN THOẠI (PWA) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Học Tiếng Trung">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#4f46e5">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
@@ -48,17 +56,8 @@
         </div>
       </div>
 
-      <!-- MENU CHỌN NHÓM & CHẾ ĐỘ HỌC -->
-      <nav id="main-nav" class="flex flex-wrap gap-1.5 text-xs sm:text-sm font-medium pt-1 border-t border-slate-100">
-        <button onclick="switchTab('guide')" id="tab-guide" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-semibold shadow">📖 Hướng dẫn</button>
-        <button onclick="switchTab('g1')" id="tab-g1" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Nhóm 1</button>
-        <button onclick="switchTab('g2')" id="tab-g2" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Nhóm 2</button>
-        <button onclick="switchTab('g3')" id="tab-g3" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Nhóm 3</button>
-        <button onclick="switchTab('g4')" id="tab-g4" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Nhóm 4</button>
-        <button onclick="switchTab('review')" id="tab-review" class="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-900 hover:bg-amber-200">🔄 Ôn tập (1-3-7 ngày)</button>
-        <button onclick="switchTab('passive')" id="tab-passive" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">🎧 Nghe Thụ Động</button>
-        <button onclick="switchTab('progress')" id="tab-progress" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">📊 Tiến độ</button>
-      </nav>
+      <!-- MENU TỰ ĐỘNG SINH CÁC NHÓM & CHẾ ĐỘ HỌC -->
+      <nav id="main-nav" class="flex flex-wrap gap-1.5 text-xs sm:text-sm font-medium pt-1 border-t border-slate-100"></nav>
     </div>
   </header>
 
@@ -104,14 +103,13 @@
   <script src="lessons_hsk3.js"></script>
   <script src="lessons_hsk4.js"></script>
   <script src="lessons_hsk5.js"></script>
-  <!-- Giữ file lessons.js phòng trường hợp bạn vẫn còn bài cũ chưa phân loại -->
   <script src="lessons.js"></script>
 
   <!-- ===================================================================== -->
   <!-- BỘ MÁY XỬ LÝ GỘP DỮ LIỆU ĐA FILE, STATE & LOGIC GIAO DIỆN               -->
   <!-- ===================================================================== -->
   <script>
-    // 1. Tự động gom tất cả dữ liệu từ các file con đã nạp thành 1 nguồn duy nhất
+    // 1. Tự động gộp tất cả dữ liệu từ các file con đã nạp thành 1 nguồn duy nhất
     const COMBINED_LESSONS = [
       ...(typeof LESSONS_HSK1 !== 'undefined' && Array.isArray(LESSONS_HSK1) ? LESSONS_HSK1 : []),
       ...(typeof LESSONS_HSK2 !== 'undefined' && Array.isArray(LESSONS_HSK2) ? LESSONS_HSK2 : []),
@@ -128,8 +126,8 @@
     }));
 
     let CURRENT_LEVEL = "HSK1";
-    let CURRENT_LESSON = LESSONS_LIST.find(l => l.level === CURRENT_LEVEL) || LESSONS_LIST[0] || { id: "empty", level: "HSK1", title: "Chưa có bài học", groups: [] };
-    let APP_DATA_ACTIVE = { groups: CURRENT_LESSON.groups || [] };
+    let CURRENT_LESSON = LESSONS_LIST.find(l => l.level === CURRENT_LEVEL) || LESSONS_LIST[0] || null;
+    let APP_DATA_ACTIVE = { groups: CURRENT_LESSON ? (CURRENT_LESSON.groups || []) : [] };
 
     // =========================================================================
     // BỘ MÁY PHÁT ÂM SONG NGỮ (DUAL-LANGUAGE TTS QUEUE ENGINE)
@@ -241,11 +239,13 @@
         this.isPaused = false;
         window.speechSynthesis.cancel();
         this.updateUIIndicator(false);
-        document.getElementById('tts-current-text').textContent = "Đã dừng âm thanh.";
+        const curText = document.getElementById('tts-current-text');
+        if (curText) curText.textContent = "Đã dừng âm thanh.";
       },
 
       updateUIIndicator(playing, paused = false) {
         const dot = document.getElementById('tts-indicator');
+        if (!dot) return;
         if (playing) {
           dot.className = "w-3 h-3 rounded-full bg-emerald-400 animate-ping shrink-0";
         } else if (paused) {
@@ -259,12 +259,12 @@
     window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 
     // =========================================================================
-    // QUẢN LÝ TIẾN ĐỘ & TRẠNG THÁI
+    // QUẢN LÝ TIẾN ĐỘ & TRẠNG THÁI (STATE)
     // =========================================================================
     const STATE = {
-      currentLessonId: CURRENT_LESSON.id,
+      currentLessonId: CURRENT_LESSON ? CURRENT_LESSON.id : "empty",
       currentTab: 'guide',
-      selectedWordIndexByGroup: { g1: 0, g2: 0, g3: 0, g4: 0 },
+      selectedWordIndexByGroup: {},
       completedExercises: JSON.parse(localStorage.getItem('hsk_completed_ex') || '{}'),
       masteredGroups: JSON.parse(localStorage.getItem('hsk_mastered_groups') || '{}'),
       unlockedHints: {},
@@ -273,7 +273,7 @@
       reviewRevealed: {},
       passive: {
         mode: 'context',
-        selectedGroups: { g1: true, g2: true, g3: true, g4: true },
+        selectedGroups: {},
         zhRepeat: 2,
         shadowPause: 1500,
         order: 'sequential',
@@ -288,31 +288,44 @@
     };
 
     // =========================================================================
-    // XỬ LÝ BỘ LỌC CẤP ĐỘ & BÀI HỌC
+    // XỬ LÝ SẮP XẾP SỐ BÀI HỌC CHUẨN XÁC
     // =========================================================================
-        function updateLessonDropdown() {
+    function getLessonNumber(lesson) {
+      const text = `${lesson.id || ''} ${lesson.title || ''}`.toLowerCase();
+      // Bắt chữ số sau "bài", "bai", hoặc "lesson"
+      const match = text.match(/(?:bài|bai|lesson)[^\d]*(\d+)/);
+      if (match) return parseInt(match[1], 10);
+      const fallback = text.match(/\d+/);
+      return fallback ? parseInt(fallback[0], 10) : 999;
+    }
+
+    // =========================================================================
+    // XỬ LÝ BỘ LỌC CẤP ĐỘ & BÀI HỌC (FIX TRIỆT ĐỂ LỖI CẤP ĐỘ RỖNG)
+    // =========================================================================
+    function updateLessonDropdown() {
       const selectEl = document.getElementById('lesson-select');
       if (!selectEl) return;
 
-      // 1. Lọc theo cấp độ đã chọn
       let filtered = (CURRENT_LEVEL === "ALL")
         ? [...LESSONS_LIST]
         : LESSONS_LIST.filter(l => l.level === CURRENT_LEVEL);
 
+      // XỬ LÝ TRƯỜNG HỢP: CẤP ĐỘ CHƯA CÓ BÀI HỌC
       if (filtered.length === 0) {
         selectEl.innerHTML = `<option value="">(Cấp này chưa có bài)</option>`;
+        TTS.stop();
+        CURRENT_LESSON = { id: "empty", level: CURRENT_LEVEL, title: `Cấp độ ${CURRENT_LEVEL} chưa có dữ liệu`, groups: [] };
+        APP_DATA_ACTIVE = { groups: [] };
+        STATE.currentLessonId = "empty";
+        STATE.currentTab = 'guide';
+        renderNav();
+        renderApp();
         return;
       }
 
-      // 2. TỰ ĐỘNG SẮP XẾP BÀI THEO SỐ THỨ TỰ (Bài 1 -> Bài 2 -> Bài 5 -> Bài 6...)
-      filtered.sort((a, b) => {
-        // Tách lấy con số đầu tiên trong id hoặc tiêu đề (ví dụ: "bai-5" -> 5, "Bài 6" -> 6)
-        const numA = parseInt((a.id || a.title || "").replace(/\D/g, '')) || 0;
-        const numB = parseInt((b.id || b.title || "").replace(/\D/g, '')) || 0;
-        return numA - numB;
-      });
+      // Sắp xếp bài học theo thứ tự số tăng dần (Bài 1 -> Bài 2 -> Bài 5...)
+      filtered.sort((a, b) => getLessonNumber(a) - getLessonNumber(b));
 
-      // 3. Đổ dữ liệu đã sắp xếp vào menu lựa chọn
       selectEl.innerHTML = filtered.map(l =>
         `<option value="${l.id}" ${l.id === STATE.currentLessonId ? 'selected' : ''}>${l.title}</option>`
       ).join('');
@@ -320,9 +333,11 @@
       const existsInFiltered = filtered.some(l => l.id === STATE.currentLessonId);
       if (!existsInFiltered) {
         switchLesson(filtered[0].id);
+      } else {
+        renderNav();
+        renderApp();
       }
     }
-
 
     function onSelectLevel(level) {
       CURRENT_LEVEL = level;
@@ -349,11 +364,24 @@
       CURRENT_LESSON = found;
       STATE.currentLessonId = found.id;
       APP_DATA_ACTIVE = { groups: found.groups || [] };
-      STATE.selectedWordIndexByGroup = { g1: 0, g2: 0, g3: 0, g4: 0 };
+      STATE.selectedWordIndexByGroup = {};
+
+      // Mặc định chọn tất cả các nhóm cho Passive Studio
+      STATE.passive.selectedGroups = {};
+      APP_DATA_ACTIVE.groups.forEach(g => {
+        STATE.passive.selectedGroups[g.id] = true;
+      });
+
+      // Nếu tab hiện tại là một nhóm không tồn tại trong bài mới, quay về tab guide
+      const groupExists = APP_DATA_ACTIVE.groups.some(g => g.id === STATE.currentTab);
+      if (!['guide', 'review', 'passive', 'progress'].includes(STATE.currentTab) && !groupExists) {
+        STATE.currentTab = 'guide';
+      }
 
       const badge = document.getElementById('badge-current-level');
       if (badge && found.level) badge.textContent = found.level;
 
+      renderNav();
       renderApp();
     }
 
@@ -373,32 +401,82 @@
     }
 
     // =========================================================================
-    // ĐIỀU HƯỚNG TAB & RENDER GIAO DIỆN
+    // ĐIỀU HƯỚNG THANH MENU ĐỘNG (DYNAMIC NAVIGATION)
     // =========================================================================
+    function renderNav() {
+      const nav = document.getElementById('main-nav');
+      if (!nav) return;
+
+      const hasGroups = APP_DATA_ACTIVE.groups && APP_DATA_ACTIVE.groups.length > 0;
+
+      let html = `
+        <button onclick="switchTab('guide')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${STATE.currentTab === 'guide' ? 'bg-indigo-600 text-white font-semibold shadow' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+          📖 Hướng dẫn
+        </button>
+      `;
+
+      if (hasGroups) {
+        APP_DATA_ACTIVE.groups.forEach((g, idx) => {
+          const isAct = STATE.currentTab === g.id;
+          html += `
+            <button onclick="switchTab('${g.id}')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${isAct ? 'bg-indigo-600 text-white font-semibold shadow' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+              ${g.title ? g.title.split(':')[0] : `Nhóm ${idx + 1}`}
+            </button>
+          `;
+        });
+
+        html += `
+          <button onclick="switchTab('review')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${STATE.currentTab === 'review' ? 'bg-amber-600 text-white font-semibold shadow' : 'bg-amber-100 text-amber-900 hover:bg-amber-200'}">
+            🔄 Ôn tập (1-3-7 ngày)
+          </button>
+          <button onclick="switchTab('passive')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${STATE.currentTab === 'passive' ? 'bg-emerald-600 text-white font-semibold shadow' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+            🎧 Nghe Thụ Động
+          </button>
+          <button onclick="switchTab('progress')" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${STATE.currentTab === 'progress' ? 'bg-indigo-600 text-white font-semibold shadow' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+            📊 Tiến độ
+          </button>
+        `;
+      }
+
+      nav.innerHTML = html;
+    }
+
     function switchTab(tabId) {
       TTS.stop();
       STATE.currentTab = tabId;
-      document.querySelectorAll('#main-nav button').forEach(btn => {
-        btn.className = "px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700";
-      });
-      const activeBtn = document.getElementById(`tab-${tabId}`);
-      if (activeBtn) {
-        activeBtn.className = tabId === 'passive'
-          ? "px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold shadow"
-          : "px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-semibold shadow";
-      }
+      renderNav();
       renderApp();
     }
 
+    // =========================================================================
+    // RENDER NỘI DUNG TỔNG THỂ
+    // =========================================================================
     function renderApp() {
       const container = document.getElementById('app-content');
+      if (!container) return;
+
+      // THÔNG BÁO GIAO DIỆN KHI CẤP ĐỘ CHƯA CÓ BÀI
       if (!APP_DATA_ACTIVE.groups || APP_DATA_ACTIVE.groups.length === 0) {
-        container.innerHTML = `<div class="p-8 bg-white rounded-2xl text-center text-slate-600 font-bold border border-slate-200 shadow-sm">Chưa có bài học nào trong cấp độ này. Bạn hãy chọn cấp độ khác ở trên nhé!</div>`;
+        container.innerHTML = `
+          <div class="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center max-w-xl mx-auto space-y-4 shadow-sm my-6">
+            <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner">📚</div>
+            <h3 class="text-xl font-bold text-slate-900">Cấp độ ${CURRENT_LEVEL} đang được biên soạn!</h3>
+            <p class="text-sm text-slate-500 leading-relaxed">
+              Hiện tại chưa có bài học nào trong file <code>lessons_${CURRENT_LEVEL.toLowerCase()}.js</code>. Hãy chọn cấp độ khác ở thanh menu trên hoặc bắt đầu thêm bài mới nhé.
+            </p>
+            <div class="pt-2">
+              <button onclick="onSelectLevel('HSK1')" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow transition">
+                Quay lại học HSK 1 ➔
+              </button>
+            </div>
+          </div>
+        `;
         return;
       }
+
       if (STATE.currentTab === 'guide') {
         container.innerHTML = renderGuideTab();
-      } else if (['g1', 'g2', 'g3', 'g4'].includes(STATE.currentTab)) {
+      } else if (APP_DATA_ACTIVE.groups.some(g => g.id === STATE.currentTab)) {
         container.innerHTML = renderGroupTab(STATE.currentTab);
       } else if (STATE.currentTab === 'review') {
         container.innerHTML = renderReviewTab();
@@ -406,12 +484,14 @@
         container.innerHTML = renderPassiveStudioTab();
       } else if (STATE.currentTab === 'progress') {
         container.innerHTML = renderProgressTab();
+      } else {
+        container.innerHTML = renderGuideTab();
       }
     }
 
     // TAB A: HƯỚNG DẪN
     function renderGuideTab() {
-      const totalLoadedWords = APP_DATA_ACTIVE.groups.reduce((acc, g) => acc + g.words.length, 0);
+      const totalLoadedWords = APP_DATA_ACTIVE.groups.reduce((acc, g) => acc + (g.words ? g.words.length : 0), 0);
       return `
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
           <div class="border-b border-slate-100 pb-4 flex flex-wrap items-center justify-between gap-4">
@@ -448,7 +528,7 @@
               <strong>Đang mở: ${CURRENT_LESSON.title}</strong> — Gồm <strong>${totalLoadedWords} từ vựng</strong> (${APP_DATA_ACTIVE.groups.map(g => g.title).join(' • ')}).
             </div>
             <div class="flex gap-2">
-              <button onclick="switchTab('g1')" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">Bắt đầu học Nhóm 1 ➔</button>
+              <button onclick="switchTab('${APP_DATA_ACTIVE.groups[0].id}')" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">Bắt đầu học ${APP_DATA_ACTIVE.groups[0].title.split(':')[0]} ➔</button>
               <button onclick="switchTab('passive')" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">Mở Phòng Nghe Thụ Động 🎧</button>
             </div>
           </div>
@@ -459,9 +539,7 @@
     // TAB B: HỌC THEO NHÓM
     function renderGroupTab(groupId) {
       const group = APP_DATA_ACTIVE.groups.find(g => g.id === groupId);
-      if (!group) {
-        return `<div class="bg-white rounded-2xl shadow-sm border border-amber-200 p-8 text-center text-slate-600">Nhóm này chưa có dữ liệu trong bài học hiện tại.</div>`;
-      }
+      if (!group) return `<div class="p-8 text-center text-slate-500">Nhóm không tồn tại.</div>`;
 
       const selectedIdx = STATE.selectedWordIndexByGroup[groupId] || 0;
       const word = group.words[selectedIdx] || group.words[0];
@@ -474,7 +552,7 @@
               <div>
                 <span class="text-xs font-bold text-indigo-600 uppercase">${CURRENT_LESSON.level || 'HSK'} • ${CURRENT_LESSON.title}</span>
                 <h2 class="text-xl font-bold text-slate-900">${group.title}</h2>
-                <p class="text-xs sm:text-sm text-slate-500">${group.desc}</p>
+                <p class="text-xs sm:text-sm text-slate-500">${group.desc || ''}</p>
               </div>
               <div class="flex items-center gap-2">
                 ${STATE.masteredGroups[scopedGroupKey]
@@ -506,7 +584,7 @@
                 <span class="text-xs font-bold uppercase text-indigo-600">Kiểm tra mức độ hiểu sâu</span>
                 <h3 class="text-lg font-bold text-slate-900">E. Bài Tập Tương Tác Sau ${group.title}</h3>
               </div>
-              <span class="text-xs text-slate-500">Hoàn thành cả 3 câu để mở khóa trạng thái Thành thạo</span>
+              <span class="text-xs text-slate-500">Hoàn thành cả ${group.exercises.length} câu để mở khóa trạng thái Thành thạo</span>
             </div>
 
             <div class="space-y-5">
@@ -673,6 +751,7 @@
 
     function playWordSection(groupId, wordIndex, section, subIdx = 0) {
       const group = APP_DATA_ACTIVE.groups.find(g => g.id === groupId);
+      if (!group) return;
       const w = group.words.find(item => item.index === wordIndex);
       if (!w) return;
 
@@ -686,6 +765,7 @@
 
     function playSequentialWordLecture(groupId, wordIndex) {
       const group = APP_DATA_ACTIVE.groups.find(g => g.id === groupId);
+      if (!group) return;
       const w = group.words.find(item => item.index === wordIndex);
       if (!w) return;
 
@@ -890,7 +970,7 @@
       renderApp();
     }
 
-    // TAB D: PASSIVE LISTENING STUDIO
+    // TAB D: PASSIVE LISTENING STUDIO (THÍCH ỨNG ĐỘNG CÁC NHÓM)
     function renderPassiveStudioTab() {
       const p = STATE.passive;
       return `
@@ -953,10 +1033,10 @@
               <div>
                 <label class="block text-xs font-bold uppercase text-slate-500 mb-1.5">Phạm vi nhóm từ vựng:</label>
                 <div class="flex flex-wrap gap-2">
-                  ${['g1', 'g2', 'g3', 'g4'].map((gid, idx) => `
-                    <label class="px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${p.selectedGroups[gid] ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-600'}">
-                      <input type="checkbox" class="hidden" ${p.selectedGroups[gid] ? 'checked' : ''} onchange="STATE.passive.selectedGroups['${gid}'] = this.checked; renderApp();" />
-                      Nhóm ${idx + 1}
+                  ${APP_DATA_ACTIVE.groups.map((g, idx) => `
+                    <label class="px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${p.selectedGroups[g.id] ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-600'}">
+                      <input type="checkbox" class="hidden" ${p.selectedGroups[g.id] ? 'checked' : ''} onchange="STATE.passive.selectedGroups['${g.id}'] = this.checked; renderApp();" />
+                      ${g.title ? g.title.split(':')[0] : `Nhóm ${idx + 1}`}
                     </label>
                   `).join('')}
                 </div>
@@ -985,7 +1065,7 @@
                 <div>
                   <label class="block text-xs font-semibold text-slate-600 mb-1">Thứ tự phát:</label>
                   <select onchange="STATE.passive.order = this.value" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
-                    <option value="sequential" ${p.order === 'sequential' ? 'selected' : ''}>Tuần tự (1 ➔ 24)</option>
+                    <option value="sequential" ${p.order === 'sequential' ? 'selected' : ''}>Tuần tự (1 ➔ cuối)</option>
                     <option value="shuffle" ${p.order === 'shuffle' ? 'selected' : ''}>Trộn ngẫu nhiên (Shuffle)</option>
                   </select>
                 </div>
@@ -1096,7 +1176,7 @@
               if (hEl) hEl.textContent = item.metaWord.hanzi;
               if (mEl) mEl.textContent = item.metaWord.coreMeaning;
               if (sEl) sEl.innerHTML = highlightTargetWord(item.metaSentence || "", item.metaWord.hanzi);
-              if (bEl) bEl.textContent = `Đang phát: Từ #${item.metaWord.index}/24 (${item.metaWord.hanzi})`;
+              if (bEl) bEl.textContent = `Đang phát: Từ #${item.metaWord.index} (${item.metaWord.hanzi})`;
             }
           },
           () => {
@@ -1134,9 +1214,9 @@
 
     // TAB E: TIẾN ĐỘ HỌC TẬP
     function renderProgressTab() {
-      const totalExercises = APP_DATA_ACTIVE.groups.reduce((acc, g) => acc + g.exercises.length, 0);
+      const totalExercises = APP_DATA_ACTIVE.groups.reduce((acc, g) => acc + (g.exercises ? g.exercises.length : 0), 0);
       const doneExercises = APP_DATA_ACTIVE.groups.reduce((acc, g) => {
-        return acc + g.exercises.filter(ex => STATE.completedExercises[getScopedKey(ex.id)] !== undefined).length;
+        return acc + (g.exercises ? g.exercises.filter(ex => STATE.completedExercises[getScopedKey(ex.id)] !== undefined).length : 0);
       }, 0);
       const masteredCount = APP_DATA_ACTIVE.groups.filter(g => STATE.masteredGroups[getScopedKey(g.id)]).length;
 
@@ -1178,7 +1258,6 @@
 
     // Khởi chạy ứng dụng
     initLessonSelector();
-    renderApp();
   </script>
 </body>
 </html>
