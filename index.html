@@ -290,12 +290,13 @@
     // =========================================================================
     // XỬ LÝ BỘ LỌC CẤP ĐỘ & BÀI HỌC
     // =========================================================================
-    function updateLessonDropdown() {
+        function updateLessonDropdown() {
       const selectEl = document.getElementById('lesson-select');
       if (!selectEl) return;
 
-      const filtered = (CURRENT_LEVEL === "ALL")
-        ? LESSONS_LIST
+      // 1. Lọc theo cấp độ đã chọn
+      let filtered = (CURRENT_LEVEL === "ALL")
+        ? [...LESSONS_LIST]
         : LESSONS_LIST.filter(l => l.level === CURRENT_LEVEL);
 
       if (filtered.length === 0) {
@@ -303,6 +304,15 @@
         return;
       }
 
+      // 2. TỰ ĐỘNG SẮP XẾP BÀI THEO SỐ THỨ TỰ (Bài 1 -> Bài 2 -> Bài 5 -> Bài 6...)
+      filtered.sort((a, b) => {
+        // Tách lấy con số đầu tiên trong id hoặc tiêu đề (ví dụ: "bai-5" -> 5, "Bài 6" -> 6)
+        const numA = parseInt((a.id || a.title || "").replace(/\D/g, '')) || 0;
+        const numB = parseInt((b.id || b.title || "").replace(/\D/g, '')) || 0;
+        return numA - numB;
+      });
+
+      // 3. Đổ dữ liệu đã sắp xếp vào menu lựa chọn
       selectEl.innerHTML = filtered.map(l =>
         `<option value="${l.id}" ${l.id === STATE.currentLessonId ? 'selected' : ''}>${l.title}</option>`
       ).join('');
@@ -312,6 +322,7 @@
         switchLesson(filtered[0].id);
       }
     }
+
 
     function onSelectLevel(level) {
       CURRENT_LEVEL = level;
