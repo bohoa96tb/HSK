@@ -5,8 +5,8 @@
 
 const ALL_LESSONS = [
   {
-    id: "lesson-hsk2-24words",
-    title: "Bài học 24 Từ vựng Trọng tâm HSK 2 - HSK 3",
+    id: "lesson-hsk1-bai16-24words",
+    title: "Bài học 24 Từ vựng Trọng tâm HSK 1 - HSK 3",
     groups: [
       {
         id: "group-1",
