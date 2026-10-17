@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HSK Audio Interactive Learning & Passive Studio</title>
+  <title>HSK Multi-Level Audio Learning Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
@@ -12,7 +12,6 @@
     .target-hl { color: #d97706; font-weight: 900; text-decoration: underline; text-underline-offset: 6px; }
     .active-card { ring: 3px solid #4f46e5; background-color: #eef2ff !important; }
   </style>
-  <!-- SAU NÀY DÁN MÃ GOOGLE ADSENSE AUTO ADS VÀO NGAY DƯỚI DÒNG NÀY NẾU CÓ -->
 </head>
 <body class="text-slate-800 pb-28">
 
@@ -25,7 +24,7 @@
           <h1 class="font-bold text-slate-900 text-base sm:text-lg">Học Tiếng Trung Qua Audio Giảng Bài</h1>
         </div>
 
-        <!-- BỘ LỌC 2 CẤP ĐỘ: CẤP ĐỘ HSK & DANH SÁCH BÀI HỌC TỰ ĐỘNG -->
+        <!-- BỘ LỌC 2 CẤP ĐỘ: CẤP ĐỘ HSK & DANH SÁCH BÀI HỌC -->
         <div class="flex flex-wrap items-center gap-1.5 bg-indigo-50 border border-indigo-200 p-1.5 rounded-xl shadow-sm">
           <!-- 1. Bộ lọc cấp độ HSK -->
           <div class="flex items-center gap-1.5 px-1.5">
@@ -63,7 +62,7 @@
     </div>
   </header>
 
-  <!-- KHUNG HIỂN THỊ BANNER QUẢNG CÁO TÙY CHỌN -->
+  <!-- KHUNG QUẢNG CÁO TÙY CHỌN -->
   <div id="ad-banner-top" class="max-w-5xl mx-auto px-4 mt-3 hidden">
     <div class="bg-slate-100 border border-dashed border-slate-300 rounded-xl p-3 text-center text-xs text-slate-400">
       Khu vực hiển thị Quảng cáo (AdSense)
@@ -97,23 +96,39 @@
     </div>
   </footer>
 
-  <!-- 1. NẠP DỮ LIỆU TỪ LESSONS.JS -->
+  <!-- ===================================================================== -->
+  <!-- NẠP CÁC FILE CON THEO TỪNG CẤP ĐỘ HSK (CÁCH 2)                         -->
+  <!-- ===================================================================== -->
+  <script src="lessons_hsk1.js"></script>
+  <script src="lessons_hsk2.js"></script>
+  <script src="lessons_hsk3.js"></script>
+  <script src="lessons_hsk4.js"></script>
+  <script src="lessons_hsk5.js"></script>
+  <!-- Giữ file lessons.js phòng trường hợp bạn vẫn còn bài cũ chưa phân loại -->
   <script src="lessons.js"></script>
 
-  <!-- 2. BỘ MÁY XỬ LÝ LOGIC, ĐA CẤP ĐỘ & ÂM THANH -->
+  <!-- ===================================================================== -->
+  <!-- BỘ MÁY XỬ LÝ GỘP DỮ LIỆU ĐA FILE, STATE & LOGIC GIAO DIỆN               -->
+  <!-- ===================================================================== -->
   <script>
-    // Chuẩn hóa danh sách bài học và tự động gán level mặc định là HSK1 nếu bài chưa có thuộc tính level
-    const RAW_LESSONS = (typeof ALL_LESSONS !== 'undefined' && ALL_LESSONS.length > 0)
-      ? ALL_LESSONS
-      : (typeof APP_DATA !== 'undefined' ? [{ id: "lesson-1", level: "HSK1", title: "Bài 1: 24 Từ Vựng Đầu Tiên", groups: APP_DATA.groups }] : []);
+    // 1. Tự động gom tất cả dữ liệu từ các file con đã nạp thành 1 nguồn duy nhất
+    const COMBINED_LESSONS = [
+      ...(typeof LESSONS_HSK1 !== 'undefined' && Array.isArray(LESSONS_HSK1) ? LESSONS_HSK1 : []),
+      ...(typeof LESSONS_HSK2 !== 'undefined' && Array.isArray(LESSONS_HSK2) ? LESSONS_HSK2 : []),
+      ...(typeof LESSONS_HSK3 !== 'undefined' && Array.isArray(LESSONS_HSK3) ? LESSONS_HSK3 : []),
+      ...(typeof LESSONS_HSK4 !== 'undefined' && Array.isArray(LESSONS_HSK4) ? LESSONS_HSK4 : []),
+      ...(typeof LESSONS_HSK5 !== 'undefined' && Array.isArray(LESSONS_HSK5) ? LESSONS_HSK5 : []),
+      ...(typeof ALL_LESSONS !== 'undefined' && Array.isArray(ALL_LESSONS) ? ALL_LESSONS : [])
+    ];
 
-    const LESSONS_LIST = RAW_LESSONS.map(l => ({
+    // Chuẩn hóa và tự động điền level mặc định nếu bài thiếu trường level
+    const LESSONS_LIST = COMBINED_LESSONS.map(l => ({
       ...l,
       level: (l.level || "HSK1").toUpperCase()
     }));
 
     let CURRENT_LEVEL = "HSK1";
-    let CURRENT_LESSON = LESSONS_LIST.find(l => l.level === CURRENT_LEVEL) || LESSONS_LIST[0] || { id: "empty", level: "HSK1", title: "Chưa có dữ liệu", groups: [] };
+    let CURRENT_LESSON = LESSONS_LIST.find(l => l.level === CURRENT_LEVEL) || LESSONS_LIST[0] || { id: "empty", level: "HSK1", title: "Chưa có bài học", groups: [] };
     let APP_DATA_ACTIVE = { groups: CURRENT_LESSON.groups || [] };
 
     // =========================================================================
@@ -244,7 +259,7 @@
     window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 
     // =========================================================================
-    // QUẢN LÝ TRẠNG THÁI (STATE) & TIẾN ĐỘ
+    // QUẢN LÝ TIẾN ĐỘ & TRẠNG THÁI
     // =========================================================================
     const STATE = {
       currentLessonId: CURRENT_LESSON.id,
@@ -273,7 +288,7 @@
     };
 
     // =========================================================================
-    // ĐIỀU HƯỚNG BỘ LỌC CẤP ĐỘ & BÀI HỌC
+    // XỬ LÝ BỘ LỌC CẤP ĐỘ & BÀI HỌC
     // =========================================================================
     function updateLessonDropdown() {
       const selectEl = document.getElementById('lesson-select');
@@ -284,7 +299,7 @@
         : LESSONS_LIST.filter(l => l.level === CURRENT_LEVEL);
 
       if (filtered.length === 0) {
-        selectEl.innerHTML = `<option value="">(Chưa có bài nào)</option>`;
+        selectEl.innerHTML = `<option value="">(Cấp này chưa có bài)</option>`;
         return;
       }
 
@@ -325,7 +340,6 @@
       APP_DATA_ACTIVE = { groups: found.groups || [] };
       STATE.selectedWordIndexByGroup = { g1: 0, g2: 0, g3: 0, g4: 0 };
 
-      // Cập nhật nhãn cấp độ ở đầu trang
       const badge = document.getElementById('badge-current-level');
       if (badge && found.level) badge.textContent = found.level;
 
@@ -368,7 +382,7 @@
     function renderApp() {
       const container = document.getElementById('app-content');
       if (!APP_DATA_ACTIVE.groups || APP_DATA_ACTIVE.groups.length === 0) {
-        container.innerHTML = `<div class="p-8 bg-white rounded-2xl text-center text-rose-600 font-bold border border-rose-200">Không tìm thấy dữ liệu bài học. Hãy kiểm tra lại file lessons.js!</div>`;
+        container.innerHTML = `<div class="p-8 bg-white rounded-2xl text-center text-slate-600 font-bold border border-slate-200 shadow-sm">Chưa có bài học nào trong cấp độ này. Bạn hãy chọn cấp độ khác ở trên nhé!</div>`;
         return;
       }
       if (STATE.currentTab === 'guide') {
@@ -394,7 +408,7 @@
               <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">${CURRENT_LESSON.level || 'HSK'} • ${CURRENT_LESSON.title}</span>
               <h2 class="text-2xl font-bold text-slate-900 mt-1">Hướng Dẫn Học Tiếng Trung Qua Audio Tương Tác</h2>
             </div>
-            <button onclick="TTS.playQueue([{lang:'vi-VN', text:'Chào mừng bạn đến với ứng dụng học tiếng Trung qua Audio. Hãy chọn cấp độ và bài học ở góc trên để bắt đầu nghe giảng.'}], 'Lời chào mở đầu')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow">
+            <button onclick="TTS.playQueue([{lang:'vi-VN', text:'Chào mừng bạn đến với ứng dụng học tiếng Trung qua Audio. Hãy chọn cấp độ HSK và bài học ở góc trên để bắt đầu nghe giảng.'}], 'Lời chào mở đầu')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow">
               🔊 Nghe giới thiệu phương pháp
             </button>
           </div>
@@ -1071,7 +1085,7 @@
               if (hEl) hEl.textContent = item.metaWord.hanzi;
               if (mEl) mEl.textContent = item.metaWord.coreMeaning;
               if (sEl) sEl.innerHTML = highlightTargetWord(item.metaSentence || "", item.metaWord.hanzi);
-              if (bEl) bEl.textContent = `Đang phát: Từ #${item.metaWord.index} (${item.metaWord.hanzi})`;
+              if (bEl) bEl.textContent = `Đang phát: Từ #${item.metaWord.index}/24 (${item.metaWord.hanzi})`;
             }
           },
           () => {
