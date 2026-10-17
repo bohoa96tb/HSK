@@ -9,8 +9,8 @@
 // =============================================================================
 const LESSON_NUMBER = 16;
 const LESSON_LEVEL = "HSK1";
-const LESSON_ID = `bai-${LESSON_NUMBER}`;
-const LESSON_TITLE = `Bài ${LESSON_NUMBER}: Giao Tiếp Cơ Bản & Định Hướng Không Gian`;
+const LESSON_ID = `bai-16{LESSON_NUMBER}`;
+const LESSON_TITLE = `Bài 16{LESSON_NUMBER}: Giao Tiếp Cơ Bản & Định Hướng Không Gian`;
 
 // Khai báo biến top-level tương thích với window.ALL_LESSONS của ứng dụng
 const ALL_LESSONS = [
