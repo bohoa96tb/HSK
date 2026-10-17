@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <title>Tiếng Trung HSK1–HSK2 | Hệ Thống Học Âm Thanh Tương Tác</title>
+  <title>Học Tiếng Trung HSK1–HSK2 | Hệ Thống Học Âm Thanh Đa Tầng</title>
 
   <!-- PWA & Mobile Meta Tags -->
   <meta name="theme-color" content="#4f46e5" />
@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="mobile-web-app-capable" content="yes" />
 
-  <!-- Google Fonts: Inter & Noto Sans SC cho Chữ Hán Giản Thể -->
+  <!-- Google Fonts: Inter (Giao diện) & Noto Sans SC (Chữ Hán chuẩn mực) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
@@ -42,7 +42,6 @@
   </script>
 
   <style>
-    /* CSS Variables & Dark Mode Polish */
     :root {
       --app-font-size: 16px;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -52,7 +51,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     body {
-      padding-bottom: calc(5rem + var(--safe-bottom));
+      padding-bottom: calc(5.5rem + var(--safe-bottom));
     }
     .hanzi-text {
       font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -72,9 +71,7 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .dark ::-webkit-scrollbar-thumb { background: #475569; }
-    /* Accordion transitions */
     details summary::-webkit-details-marker { display: none; }
-    /* Ensure touch target >= 44px */
     .touch-target { min-height: 44px; min-width: 44px; }
     @media (prefers-reduced-motion: reduce) {
       * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
@@ -110,7 +107,7 @@
 
   <!-- ================= MAIN CONTENT CONTAINER ================= -->
   <main id="app-viewport" class="flex-1 max-w-5xl w-full mx-auto px-4 py-4 sm:py-6" role="main">
-    <!-- Nội dung render động theo Router -->
+    <!-- Nội dung được kết xuất động theo Router -->
   </main>
 
   <!-- ================= GLOBAL FLOATING AUDIO DOCK ================= -->
@@ -141,7 +138,7 @@
     </div>
   </aside>
 
-  <!-- ================= BOTTOM NAVIGATION BAR (MOBILE FIRST) ================= -->
+  <!-- ================= BOTTOM NAVIGATION BAR ================= -->
   <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]" aria-label="Thanh điều hướng chính">
     <div class="max-w-lg mx-auto grid grid-cols-5 h-16 text-[11px] font-medium text-slate-500 dark:text-slate-400">
       <button onclick="Router.navigate('home')" id="nav-btn-home" class="flex flex-col items-center justify-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
@@ -171,16 +168,15 @@
     </div>
   </nav>
 
-  <!-- ================= TẬP TIN DỮ LIỆU BÀI HỌC ================= -->
-  <!-- Đổi tên file nếu dùng file khác như lesson_HSK1.js hoặc lessons_hsk1_revised.js -->
+  <!-- ================= TỆP DỮ LIỆU BÀI HỌC ================= -->
+  <!-- Nạp tệp dữ liệu JavaScript tương ứng đã biên soạn -->
   <script src="lesson_HSK1.js" onerror="window.__LESSON_LOAD_ERROR__ = true;"></script>
-  <script src="lessons_hsk1_revised.js" onerror="/* file dự phòng */"></script>
 
   <!-- ================= APPLICATION ENGINE SCRIPT ================= -->
   <script>
     /**
      * HSK AUDIO LEARNING WEB APP - CLIENT CORE ENGINE
-     * Thiết kế thuần Vanilla JS, cấu trúc Module tách biệt rõ ràng.
+     * Thiết kế thuần Vanilla JS, tối ưu hoàn toàn cho hợp đồng dữ liệu lesson_HSK1.js
      */
 
     // 1. CẤU HÌNH & HỆ THỐNG LƯU TRỮ (STORAGE)
@@ -216,12 +212,12 @@
           const raw = localStorage.getItem(APP_CONFIG.STORAGE_KEY);
           return raw ? JSON.parse(raw) : {
             version: APP_CONFIG.VERSION,
-            completedWords: {},    // wordId -> timestamp
-            completedExercises: {},// exerciseId -> { selected, isCorrect, timestamp }
-            selfUseAnswers: {},    // selfUseId -> string text
-            notes: {},             // wordId -> string
-            bookmarks: {},         // wordId -> boolean
-            reviewsSchedule: {},   // wordId -> { stage: 1|3|7, dueDate: timestamp, history: [] }
+            completedWords: {},
+            completedExercises: {},
+            selfUseAnswers: {},
+            notes: {},
+            bookmarks: {},
+            reviewsSchedule: {},
             lastLessonId: null,
             lastGroupId: null,
             lastWordId: null
@@ -269,12 +265,10 @@
     // 2. CHUẨN HÓA DỮ LIỆU HỌC LIỆU (DATA NORMALIZER)
     const DataNormalizer = {
       findRawLessons() {
-        // Kiểm tra biến mảng theo nhiều kiểu khai báo thông dụng
         if (typeof ALL_LESSONS !== 'undefined' && Array.isArray(ALL_LESSONS)) return ALL_LESSONS;
         if (typeof window.ALL_LESSONS !== 'undefined' && Array.isArray(window.ALL_LESSONS)) return window.ALL_LESSONS;
         if (typeof LESSONS_HSK1 !== 'undefined' && Array.isArray(LESSONS_HSK1)) return LESSONS_HSK1;
         if (typeof window.LESSONS_HSK1 !== 'undefined' && Array.isArray(window.LESSONS_HSK1)) return window.LESSONS_HSK1;
-        if (typeof COMBINED_LESSONS !== 'undefined' && Array.isArray(COMBINED_LESSONS)) return COMBINED_LESSONS;
         return null;
       },
 
@@ -296,7 +290,7 @@
             const pinyin = w.pinyin || '';
             const coreMeaning = w.coreMeaning || 'Chưa có giải nghĩa chính';
 
-            // Audio giới thiệu
+            // Intro audio
             const introAudio = Array.isArray(w.introAudio) ? w.introAudio : [
               { lang: "zh-CN", text: hanzi, pause: 400 },
               { lang: "vi-VN", text: coreMeaning, pause: 300 }
@@ -327,17 +321,14 @@
               explainAudio: Array.isArray(ex.explainAudio) ? ex.explainAudio : []
             })) : [];
 
-            // 5.5 Bẫy ngữ pháp (Hỗ trợ cả trap đơn và traps mảng)
+            // 5.5 Bẫy ngữ pháp (Hỗ trợ cả traps mảng và trap đơn)
             const trapsList = [];
             if (Array.isArray(w.traps)) {
               trapsList.push(...w.traps);
             } else if (w.trap && typeof w.trap === 'object') {
               trapsList.push(w.trap);
             }
-            if (Array.isArray(w.additionalTraps)) {
-              trapsList.push(...w.additionalTraps);
-            }
-            // Khử trùng lặp tên bẫy
+
             const uniqueTraps = [];
             const seenTrapNames = new Set();
             trapsList.forEach(t => {
@@ -364,13 +355,13 @@
               }
             });
 
-            // 5.6 Phát âm & 5.7 Mặt chữ & 5.8 Chốt cách dùng
+            // 5.6 Phát âm & 5.7 Mặt chữ & 5.8 Chốt dùng
             const pron = {
               guide: (w.pron && w.pron.guide) || 'Luyện đọc tròn vành rõ thanh điệu.',
               audio: (w.pron && Array.isArray(w.pron.audio)) ? w.pron.audio : []
             };
             const write = {
-              desc: (w.write && w.write.desc) || 'Quan sát nét bút và bộ thủ cấu thành.',
+              desc: (w.write && w.write.desc) || 'Quan sát nét bút và cấu tạo bộ thủ.',
               audio: (w.write && Array.isArray(w.write.audio)) ? w.write.audio : []
             };
             const summary = typeof w.summary === 'string' ? w.summary : 'Nắm vững bản chất và bối cảnh sử dụng của từ.';
@@ -394,13 +385,12 @@
             };
           });
 
-          // Chuẩn hóa bài tập trắc nghiệm nhóm
+          // Chuẩn hóa bài tập trắc nghiệm & nghe hiểu
           const exercises = Array.isArray(grp.exercises) ? grp.exercises.map((ex, exIdx) => ({
             id: String(ex.id || `${groupId}_ex${exIdx + 1}`),
             type: ex.type || 'Trắc nghiệm',
             prompt: ex.prompt || ex.q || 'Chọn đáp án đúng nhất:',
             options: Array.isArray(ex.options) ? ex.options : [],
-            // Giữ chính xác giá trị 0-based
             correct: typeof ex.correct === 'number' ? ex.correct : 0,
             reasonRight: ex.reasonRight || 'Chính xác theo quy tắc ngữ pháp.',
             reasonWrong: ex.reasonWrong || 'Chưa đúng, hãy xem lại bản chất của từ.',
@@ -410,11 +400,10 @@
             explainAudio: Array.isArray(ex.explainAudio) ? ex.explainAudio : []
           })) : [];
 
-          // Chuẩn hóa phần Tự Dùng Từ (Self-Use: object hoặc array)
+          // Chuẩn hóa phần Tự Dùng Từ (3 Tầng gợi ý)
           const rawSelfList = [];
           if (Array.isArray(grp.selfUse)) rawSelfList.push(...grp.selfUse);
           else if (grp.selfUse && typeof grp.selfUse === 'object') rawSelfList.push(grp.selfUse);
-          if (Array.isArray(grp.additionalSelfUse)) rawSelfList.push(...grp.additionalSelfUse);
 
           const selfUse = rawSelfList.map((s, sIdx) => ({
             id: String(s.id || `${groupId}_su${sIdx + 1}`),
@@ -429,7 +418,7 @@
             modelAudio: Array.isArray(s.modelAudio) ? s.modelAudio : []
           }));
 
-          // Chuẩn hóa câu hỏi ôn tập 1-3-7 ngày
+          // Chuẩn hóa câu hỏi ôn tập ngắt quãng 1-3-7 ngày
           const reviews = Array.isArray(grp.reviews) ? grp.reviews.map((r, rIdx) => ({
             id: String(r.id || `${groupId}_rev${rIdx + 1}`),
             day: r.day || 1,
@@ -487,7 +476,6 @@
         const voices = this.getVoices();
         const settings = Storage.getSettings();
 
-        // Ưu tiên giọng được người dùng gán thủ công trong Cài Đặt
         if (langCode.startsWith('vi') && settings.voiceVi) {
           const match = voices.find(v => v.voiceURI === settings.voiceVi);
           if (match) return match;
@@ -497,7 +485,6 @@
           if (match) return match;
         }
 
-        // Tự động tìm giọng phù hợp nhất
         const exact = voices.find(v => v.lang.replace('_', '-').toLowerCase() === langCode.toLowerCase());
         if (exact) return exact;
         return voices.find(v => v.lang.toLowerCase().startsWith(langCode.slice(0, 2).toLowerCase())) || null;
@@ -544,7 +531,8 @@
 
         const lang = item.lang || 'vi-VN';
         const langLabel = lang.startsWith('zh') ? '🇨🇳 Tiếng Trung' : '🇻🇳 Tiếng Việt';
-        document.getElementById('audio-caption-bar').textContent = `[${langLabel}] ${cleanText}`;
+        const captionBar = document.getElementById('audio-caption-bar');
+        if (captionBar) captionBar.textContent = `[${langLabel}] ${cleanText}`;
 
         const utter = new SpeechSynthesisUtterance(cleanText);
         this.currentUtterance = utter;
@@ -584,7 +572,8 @@
           this.isPaused = false;
           window.speechSynthesis.resume();
           this.updateLED('playing');
-          document.getElementById('label-audio-playpause').textContent = "⏸ Tạm dừng";
+          const lbl = document.getElementById('label-audio-playpause');
+          if (lbl) lbl.textContent = "⏸ Tạm dừng";
           this.processNext();
         } else {
           this.isPaused = true;
@@ -592,7 +581,8 @@
           clearTimeout(this.timer);
           window.speechSynthesis.cancel();
           this.updateLED('paused');
-          document.getElementById('label-audio-playpause').textContent = "▶ Tiếp tục";
+          const lbl = document.getElementById('label-audio-playpause');
+          if (lbl) lbl.textContent = "▶ Tiếp tục";
         }
       },
 
@@ -610,18 +600,20 @@
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         this.updateLED('stopped');
         this.setUIStatus("Đã dừng âm thanh.", false);
-        document.getElementById('label-audio-playpause').textContent = "▶ Phát";
+        const lbl = document.getElementById('label-audio-playpause');
+        if (lbl) lbl.textContent = "▶ Phát";
       },
 
       cycleRate() {
         const settings = Storage.getSettings();
         let curRate = Number(settings.rate) || 1.0;
         let nextIdx = (this.rates.indexOf(curRate) + 1) % this.rates.length;
-        if (nextIdx < 0) nextIdx = 2; // 1.0
+        if (nextIdx < 0) nextIdx = 2;
         const newRate = this.rates[nextIdx];
         settings.rate = newRate;
         Storage.saveSettings(settings);
-        document.getElementById('btn-audio-rate').textContent = `${newRate}×`;
+        const btn = document.getElementById('btn-audio-rate');
+        if (btn) btn.textContent = `${newRate}×`;
       },
 
       setDockVisible(visible) {
@@ -645,14 +637,13 @@
       }
     };
 
-    // 4. BỘ ĐIỀU HƯỚNG & QUẢN LÝ GIAO DIỆN (ROUTER & STORE)
+    // 4. BỘ ĐIỀU HƯỚNG & QUẢN LÝ DỮ LIỆU (ROUTER & STORE)
     const AppStore = {
       lessons: [],
       currentLesson: null,
       currentGroup: null,
       currentWord: null,
       currentTab: 'home',
-      activeFilter: 'ALL',
       searchQuery: ''
     };
 
@@ -674,7 +665,6 @@
           if (w) AppStore.currentWord = w;
         }
 
-        // Lưu trạng thái xem gần nhất
         const progress = Storage.getProgress();
         if (AppStore.currentLesson) progress.lastLessonId = AppStore.currentLesson.id;
         if (AppStore.currentGroup) progress.lastGroupId = AppStore.currentGroup.id;
@@ -700,7 +690,7 @@
       }
     };
 
-    // 5. BỘ TRÌNH DIỄN GIAO DIỆN (VIEW RENDERERS)
+    // 5. BỘ TRÌNH DIỄN GIAO DIỆN (VIEW RENDERER)
     const Renderer = {
       escapeHtml(str) {
         return String(str ?? '').replace(/[&<>"']/g, c => ({
@@ -719,7 +709,6 @@
         const viewport = document.getElementById('app-viewport');
         if (!viewport) return;
 
-        // Nếu chưa nạp được bài học
         if (!AppStore.lessons || AppStore.lessons.length === 0) {
           viewport.innerHTML = this.renderEmptyDataNotice();
           return;
@@ -757,7 +746,7 @@
             </div>
             <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Chưa tìm thấy tệp bài học</h2>
             <p class="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-              Vui lòng đặt tệp học liệu (như <code>lesson_HSK1.js</code> hoặc <code>lessons_hsk1_revised.js</code>) cùng thư mục với tệp <code>index.html</code> này. Tệp cần chứa mảng <code>ALL_LESSONS</code> hoặc <code>LESSONS_HSK1</code>.
+              Vui lòng đặt tệp học liệu <code>lesson_HSK1.js</code> cùng thư mục với tệp <code>index.html</code> này. Tệp cần chứa mảng <code>ALL_LESSONS</code>.
             </p>
             <button onclick="location.reload()" class="touch-target px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow">
               Tải lại trang ⟳
@@ -766,13 +755,12 @@
         `;
       },
 
-      // === A. TRANG CHỦ (HOME DASHBOARD) ===
+      // === A. TRANG CHỦ ===
       renderHomeView() {
         const progress = Storage.getProgress();
         const totalWords = AppStore.lessons.reduce((acc, l) => acc + l.groups.reduce((gAcc, g) => gAcc + g.words.length, 0), 0);
         const learnedWordsCount = Object.keys(progress.completedWords || {}).length;
 
-        // Tính số từ đến hạn ôn tập hôm nay
         const now = Date.now();
         let dueReviewCount = 0;
         Object.values(progress.reviewsSchedule || {}).forEach(r => {
@@ -787,11 +775,11 @@
             <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
               <div class="flex items-center justify-between text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-2">
                 <span>Cấp độ: ${curLesson.level}</span>
-                <span>Học qua âm thanh</span>
+                <span>Học âm thanh tương tác</span>
               </div>
-              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">Xin chào! Tiếp tục hành trình</h2>
-              <p class="text-sm text-indigo-100 max-w-lg mb-6 leading-relaxed">
-                Nghe giảng trực tiếp từng từ vựng, phân tích ví dụ không phụ thuộc Pinyin và làm chủ bẫy ngữ pháp người Việt thường gặp.
+              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">${curLesson.title}</h2>
+              <p class="text-sm text-indigo-100 max-w-xl mb-6 leading-relaxed">
+                Nghe giảng trực tiếp từng từ vựng, phân tích ví dụ chuẩn ngữ cảnh, nắm chắc bẫy ngữ pháp người Việt thường gặp và luyện tập đa tầng.
               </p>
               <div class="flex flex-wrap items-center gap-3">
                 <button onclick="Router.navigate('lesson', { lessonId: '${curLesson.id}' })" class="touch-target px-5 py-3 rounded-2xl bg-white text-indigo-900 font-bold text-sm shadow-md hover:bg-indigo-50 transition flex items-center gap-2">
@@ -815,8 +803,8 @@
                 <div class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">${dueReviewCount} <span class="text-xs font-normal text-slate-400">từ</span></div>
               </div>
               <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-                <div class="text-[11px] font-bold uppercase text-indigo-500">Tổng số bài</div>
-                <div class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">${AppStore.lessons.length}</div>
+                <div class="text-[11px] font-bold uppercase text-indigo-500">Nhóm chủ đề</div>
+                <div class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">${curLesson.groups.length}</div>
               </div>
               <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
                 <div class="text-[11px] font-bold uppercase text-emerald-500">Bài tập đã làm</div>
@@ -824,27 +812,28 @@
               </div>
             </div>
 
-            <!-- Danh sách bài học -->
+            <!-- Danh sách các nhóm bài học -->
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white">Danh sách bài học</h3>
-                <span class="text-xs text-slate-500">Chọn một bài để xem chi tiết</span>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">Các nhóm từ vựng trong bài</h3>
+                <span class="text-xs text-slate-500">Bấm để vào học từng nhóm</span>
               </div>
               <div class="grid gap-3">
-                ${AppStore.lessons.map(l => {
-                  const lessonWords = l.groups.reduce((acc, g) => acc + g.words.length, 0);
-                  const isCurrent = AppStore.currentLesson && AppStore.currentLesson.id === l.id;
+                ${curLesson.groups.map((g, gIdx) => {
+                  const wordsInGroup = g.words.length;
+                  const completedInGroup = g.words.filter(w => progress.completedWords[w.id]).length;
                   return `
-                    <div onclick="Router.navigate('lesson', { lessonId: '${l.id}' })" class="cursor-pointer bg-white dark:bg-slate-900 border ${isCurrent ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-800'} rounded-2xl p-5 hover:border-indigo-400 transition flex items-center justify-between gap-4 shadow-sm">
+                    <div onclick="Router.navigate('lesson', { lessonId: '${curLesson.id}', groupId: '${g.id}', wordId: '${g.words[0] ? g.words[0].id : ''}' })" class="cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-indigo-400 transition flex items-center justify-between gap-4 shadow-sm">
                       <div class="space-y-1 min-w-0">
                         <div class="flex items-center gap-2">
-                          <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs uppercase">${l.level}</span>
-                          <span class="text-xs text-slate-400 font-medium">${l.groups.length} nhóm từ • ${lessonWords} từ vựng</span>
+                          <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs uppercase">Nhóm ${gIdx + 1}</span>
+                          <span class="text-xs text-slate-400 font-medium">${completedInGroup}/${wordsInGroup} từ đã học</span>
                         </div>
-                        <h4 class="text-base font-bold text-slate-900 dark:text-white truncate">${l.title}</h4>
+                        <h4 class="text-base font-bold text-slate-900 dark:text-white truncate">${g.title}</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">${g.desc}</p>
                       </div>
                       <button class="touch-target px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white font-semibold text-xs transition shrink-0">
-                        Mở bài ➔
+                        Học nhóm ➔
                       </button>
                     </div>
                   `;
@@ -855,7 +844,7 @@
         `;
       },
 
-      // === B. MÀN HÌNH BÀI HỌC & CHI TIẾT TỪ (LESSON & WORD STUDIO) ===
+      // === B. MÀN HÌNH BÀI HỌC & CHI TIẾT TỪ VỰNG ===
       renderLessonView() {
         const curLesson = AppStore.currentLesson || AppStore.lessons[0];
         const curGroup = AppStore.currentGroup || curLesson.groups[0];
@@ -875,7 +864,7 @@
 
         return `
           <div class="space-y-6">
-            <!-- Breadcrumbs & Navigation Bar -->
+            <!-- Navigation Header -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
@@ -890,9 +879,9 @@
                 </select>
               </div>
 
-              <!-- Thanh chuyển đổi các từ trong nhóm -->
+              <!-- Thanh chuyển từ trong nhóm -->
               <div class="flex items-center gap-2 overflow-x-auto pb-1">
-                ${curGroup.words.map((w, i) => `
+                ${curGroup.words.map((w) => `
                   <button onclick="Router.navigate('lesson', { lessonId: '${curLesson.id}', groupId: '${curGroup.id}', wordId: '${w.id}' })"
                     class="touch-target px-3 py-1.5 rounded-xl border text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${w.id === curWord.id ? 'bg-indigo-600 text-white border-indigo-600 shadow' : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'}">
                     <span class="opacity-75">#${w.index}</span>
@@ -902,8 +891,9 @@
               </div>
             </div>
 
-            <!-- CARD TỪ VỰNG TRỌNG TÂM -->
+            <!-- CARD CHI TIẾT TỪ VỰNG -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+              <!-- Tiêu đề từ vựng & Giới thiệu Pinyin duy nhất -->
               <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
                 <div class="flex items-center gap-4 sm:gap-6">
                   <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-900 flex items-center justify-center shrink-0 shadow-inner">
@@ -918,9 +908,9 @@
                     </div>
                     <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5">${curWord.coreMeaning}</h2>
 
-                    <!-- 5.1 Giới thiệu từ mới - NƠI DUY NHẤT CÓ PINYIN -->
+                    <!-- 5.1 Giới thiệu từ mới (Nơi DUY NHẤT có Pinyin theo quy chuẩn) -->
                     <div class="mt-2.5 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs font-semibold text-amber-900 dark:text-amber-200">
-                      <span>5.1 Giới thiệu từ mới (Pinyin duy nhất):</span>
+                      <span>Pinyin:</span>
                       <span class="font-bold text-sm tracking-wide font-mono">${curWord.pinyin}</span>
                       <button onclick="TTS.playQueue(${Renderer.escapeJsonAttr(curWord.introAudio)}, 'Từ #${curWord.index}: Giới thiệu')" class="touch-target ml-1 px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm">
                         🔊 Nghe phát âm
@@ -931,16 +921,16 @@
 
                 <div class="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
                   <button onclick="Renderer.playSequentialLecture('${curWord.id}')" class="touch-target w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2">
-                    <span>▶ Nghe giảng tuần tự</span>
+                    <span>▶ Nghe giảng tuần tự toàn bài</span>
                   </button>
-                  <span class="text-[11px] text-slate-400">Giảng liền mạch lý thuyết, tự dừng trước bài tập</span>
+                  <span class="text-[11px] text-slate-400">Giảng liền mạch từ nghĩa, ví dụ tới bẫy</span>
                 </div>
               </div>
 
-              <!-- 5.2 HIỂU NGHĨA & TÌNH HUỐNG SỬ DỤNG -->
+              <!-- 5.2 HIỂU NGHĨA & ĐIỀU KIỆN DÙNG -->
               <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
                 <div class="flex items-center justify-between">
-                  <h4 class="font-bold text-sm text-slate-900 dark:text-white">5.2. Hiểu nghĩa và biết khi nào dùng</h4>
+                  <h4 class="font-bold text-sm text-slate-900 dark:text-white">5.2. Hiểu nghĩa và điều kiện sử dụng</h4>
                   <button onclick="TTS.playQueue(${Renderer.escapeJsonAttr(curWord.meaning.audio)}, 'Từ #${curWord.index}: Hiểu nghĩa')" class="touch-target px-3 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 text-xs font-semibold">
                     🔊 Nghe giảng nghĩa
                   </button>
@@ -950,7 +940,7 @@
                 <p class="text-xs sm:text-sm font-semibold text-indigo-900 dark:text-indigo-300"><strong>• Chốt ý:</strong> ${curWord.meaning.keyPoint}</p>
               </div>
 
-              <!-- 5.3 CÁCH SỬ DỤNG: KHUNG CÂU & VỊ TRÍ (ĐIỂM ƯU TIÊN) -->
+              <!-- 5.3 CÁCH SỬ DỤNG: KHUNG CÂU & VỊ TRÍ -->
               <div class="space-y-3">
                 <h4 class="font-bold text-sm text-slate-900 dark:text-white">5.3. Cách sử dụng chi tiết: Khung câu & Vị trí</h4>
                 <div class="grid gap-3">
@@ -971,25 +961,30 @@
                 </div>
               </div>
 
-              <!-- 5.4 VÍ DỤ THỰC TẾ (CHỮ HÁN LỚN - ẨN/HIỆN NGHĨA) -->
+              <!-- 5.4 VÍ DỤ THỰC TẾ -->
               <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                  <h4 class="font-bold text-sm text-slate-900 dark:text-white">5.4. Ví dụ thực tế (Chữ Hán rõ nét - Không Pinyin)</h4>
-                  <span class="text-[11px] text-slate-400">Bấm câu tiếng Trung để nghe & nhắc lại</span>
+                  <h4 class="font-bold text-sm text-slate-900 dark:text-white">5.4. Ví dụ thực tế (Chữ Hán rõ nét - Ẩn/Hiện nghĩa)</h4>
+                  <span class="text-[11px] text-slate-400">Nghe & nhại câu chuẩn</span>
                 </div>
                 <div class="grid gap-3">
-                  ${curWord.examples.map((ex, eIdx) => `
+                  ${curWord.examples.map((ex) => `
                     <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div class="space-y-1">
                         <div class="hanzi-text text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-wide">
                           ${Renderer.highlightWord(ex.zh, curWord.hanzi)}
                         </div>
                         <details class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
-                          <summary class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">👁 Xem nghĩa tiếng Việt</summary>
+                          <summary class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">👁 Xem nghĩa tiếng Việt & Phân tích</summary>
                           <div class="pt-1 font-medium text-slate-800 dark:text-slate-200">${ex.vi}</div>${ex.analysis ? `<div class="text-[11px] text-slate-500 mt-1">${ex.analysis}</div>` : ''}
                         </details>
                       </div>
                       <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                        ${ex.explainAudio && ex.explainAudio.length ? `
+                          <button onclick="TTS.playQueue(${Renderer.escapeJsonAttr(ex.explainAudio)}, 'Phân tích ví dụ')" class="touch-target px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
+                            🔊 Lời giảng
+                          </button>
+                        ` : ''}
                         <button onclick="TTS.playQueue([{lang:'zh-CN', text:${JSON.stringify(ex.zh)}, pause:1500}, {lang:'vi-VN', text:'Mời bạn nhắc lại.'}], 'Nghe câu ví dụ')" class="touch-target px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 text-xs font-bold">
                           🔊 Nghe & Nhại
                         </button>
@@ -1014,6 +1009,8 @@
                         </div>
                         <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300"><strong>• Tình huống:</strong> ${t.situation}</p>
                         <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300"><strong>• Bản chất khác biệt:</strong> ${t.explanation}</p>
+
+                        <!-- So sánh đúng / sai -->
                         <div class="grid sm:grid-cols-2 gap-2 pt-1">
                           <div class="p-3 rounded-xl bg-rose-100/80 dark:bg-rose-900/40 border border-rose-300 dark:border-rose-800 text-xs sm:text-sm">
                             <span class="font-bold text-rose-800 dark:text-rose-300">${t.wrong ? '❌ Sai:' : '↔ Đối chiếu:'}</span>
@@ -1024,9 +1021,23 @@
                             <span class="hanzi-text font-bold text-emerald-950 dark:text-emerald-100 ml-1">${Renderer.highlightWord(t.right, curWord.hanzi)}</span>
                           </div>
                         </div>
+
+                        <!-- Cặp câu đối chiếu ít đổi thành phần nếu có -->
+                        ${t.comparisons && t.comparisons.length ? `
+                          <div class="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5 text-xs">
+                            <div class="font-bold text-slate-700 dark:text-slate-300">🔍 Cặp câu đối chiếu ngữ cảnh:</div>
+                            ${t.comparisons.map(cp => `
+                              <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-1 last:border-0 last:pb-0">
+                                <span class="hanzi-text font-bold text-slate-900 dark:text-white">${cp.zh}</span>
+                                <span class="text-slate-500">${cp.vi}</span>
+                              </div>
+                            `).join('')}
+                          </div>
+                        ` : ''}
+
                         <p class="text-xs font-bold text-rose-900 dark:text-rose-300">💡 Mẹo chọn nhanh: ${t.tip}</p>
 
-                        <!-- Thử phân biệt mini-quiz -->
+                        <!-- Mini quiz kiểm tra bẫy -->
                         ${t.checkQuestion ? `
                           <div class="pt-3 border-t border-rose-200 dark:border-rose-900/60 space-y-2">
                             <div class="text-xs font-bold uppercase text-rose-800 dark:text-rose-300">${t.checkQuestion.q}</div>
@@ -1103,7 +1114,7 @@
         `;
       },
 
-      // === C. MÀN HÌNH BÀI TẬP & TỰ DÙNG TỪ (EXERCISES & SELF-USE) ===
+      // === C. MÀN HÌNH BÀI TẬP & TỰ DÙNG TỪ ===
       renderExerciseView() {
         const curLesson = AppStore.currentLesson || AppStore.lessons[0];
         const curGroup = AppStore.currentGroup || curLesson.groups[0];
@@ -1113,13 +1124,13 @@
           <div class="space-y-6">
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
               <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">${curLesson.level} • ${curLesson.title}</span>
-              <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1">Luyện Tập Nhóm: ${curGroup.title}</h2>
+              <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1">Luyện Tập: ${curGroup.title}</h2>
               <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Làm bài tập trắc nghiệm ẩn đáp án và luyện đặt câu tự dùng từ 3 tầng trợ giúp.
+                Làm bài trắc nghiệm kiểm tra phản xạ và thực hành tự đặt câu với 3 tầng trợ giúp.
               </p>
             </div>
 
-            <!-- 1. BÀI TẬP TRẮC NGHIỆM -->
+            <!-- 1. BÀI TẬP TRẮC NGHIỆM & NGHE HIỂU -->
             <div class="space-y-4">
               <h3 class="text-base font-bold text-slate-900 dark:text-white">1. Bài tập trắc nghiệm & Nghe hiểu (${curGroup.exercises.length} câu)</h3>
               <div class="grid gap-4">
@@ -1140,7 +1151,7 @@
 
                       <div class="hanzi-text font-bold text-base text-slate-900 dark:text-white">${ex.prompt}</div>
 
-                      <!-- Options Buttons -->
+                      <!-- Options -->
                       <div class="grid sm:grid-cols-2 gap-2 pt-1">
                         ${ex.options.map((opt, oIdx) => `
                           <button onclick="Renderer.submitExerciseOption('${ex.id}', ${oIdx}, ${ex.correct})"
@@ -1151,11 +1162,11 @@
                         `).join('')}
                       </div>
 
-                      <!-- Transcript & Explanation Card (Sau khi nộp) -->
+                      <!-- Transcript & Explanation -->
                       ${hasAnswered ? `
                         <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs sm:text-sm">
                           <div class="font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}">
-                            ${isCorrect ? '✅ Trạng thái: ĐÚNG — ' + ex.reasonRight : '⚠️ Trạng thái: CẦN SỬA — ' + ex.reasonWrong}
+                            ${isCorrect ? '✅ ĐÚNG: ' + ex.reasonRight : '⚠️ CẦN SỬA: ' + ex.reasonWrong}
                           </div>
                           ${ex.transcript ? `
                             <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hanzi-text text-slate-800 dark:text-slate-200">
@@ -1164,7 +1175,7 @@
                           ` : ''}
                           ${ex.explainAudio.length ? `
                             <button onclick="TTS.playQueue(${Renderer.escapeJsonAttr(ex.explainAudio)}, 'Giải thích câu ${exIdx + 1}')" class="touch-target px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold">
-                              🔊 Nghe Audio giải thích chi tiết
+                              🔊 Nghe Audio giải thích
                             </button>
                           ` : ''}
                         </div>
@@ -1175,7 +1186,7 @@
               </div>
             </div>
 
-            <!-- 2. PHẦN TỰ DÙNG TỪ 3 TẦNG TRỢ GIÚP (SELF-USE) -->
+            <!-- 2. TỰ DÙNG TỪ 3 TẦNG TRỢ GIÚP -->
             ${curGroup.selfUse.length > 0 ? `
               <div class="space-y-4">
                 <h3 class="text-base font-bold text-slate-900 dark:text-white">2. Luyện tự dùng từ trong câu (3 Tầng trợ giúp)</h3>
@@ -1240,7 +1251,7 @@
         `;
       },
 
-      // === D. MÀN HÌNH ÔN TẬP 1-3-7 NGÀY & FLASHCARD (SPACED REPETITION) ===
+      // === D. MÀN HÌNH ÔN TẬP 1-3-7 NGÀY ===
       renderReviewView() {
         const curLesson = AppStore.currentLesson || AppStore.lessons[0];
         const allReviews = curLesson.groups.flatMap(g => g.reviews);
@@ -1255,7 +1266,7 @@
               </p>
             </div>
 
-            <!-- Các mốc ôn tập 1 ngày, 3 ngày, 7 ngày -->
+            <!-- Mốc 1 - 3 - 7 ngày -->
             <div class="space-y-4">
               ${[1, 3, 7].map(day => {
                 const dayReviews = allReviews.filter(r => r.day === day);
@@ -1268,7 +1279,7 @@
                     </summary>
 
                     <div class="grid gap-3 pt-4">
-                      ${dayReviews.map((r, rIdx) => `
+                      ${dayReviews.map((r) => `
                         <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2.5">
                           <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300">Dạng: ${r.type}</span>
@@ -1282,7 +1293,7 @@
 
                           <details class="text-xs pt-1">
                             <summary class="touch-target text-indigo-600 dark:text-indigo-400 font-bold cursor-pointer hover:underline">
-                              🔓 Nộp & Xem đáp án chuẩn
+                              🔓 Xem đáp án chuẩn & Lời giải
                             </summary>
                             <div class="pt-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-1.5 mt-2">
                               <div class="hanzi-text text-sm font-bold text-emerald-950 dark:text-emerald-100">✅ Đáp án: ${r.answer}</div>
@@ -1305,7 +1316,7 @@
         `;
       },
 
-      // === E. MÀN HÌNH TÌM KIẾM TỪ VỰNG (VOCABULARY SEARCH) ===
+      // === E. MÀN HÌNH TRA CỨU TỪ VỰNG ===
       renderSearchView() {
         const query = AppStore.searchQuery.toLowerCase().trim();
         const progress = Storage.getProgress();
@@ -1319,7 +1330,6 @@
           });
         });
 
-        // Lọc theo từ khóa
         if (query) {
           allWords = allWords.filter(w =>
             w.hanzi.toLowerCase().includes(query) ||
@@ -1333,7 +1343,7 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-3">
               <h2 class="text-xl font-bold text-slate-900 dark:text-white">Tra Cứu Từ Vựng</h2>
               <div class="relative">
-                <input type="text" oninput="Renderer.onSearchInput(this.value)" value="${Renderer.escapeHtml(AppStore.searchQuery)}" placeholder="Nhập chữ Hán (书店), Pinyin (shudian) hoặc nghĩa (hiệu sách)..." class="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="text" oninput="Renderer.onSearchInput(this.value)" value="${Renderer.escapeHtml(AppStore.searchQuery)}" placeholder="Nhập chữ Hán (右, 开车), Pinyin (kaiche) hoặc nghĩa..." class="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div class="text-xs text-slate-400">Tìm thấy ${allWords.length} từ vựng từ học liệu.</div>
             </div>
@@ -1351,10 +1361,10 @@
                       <div>
                         <div class="text-xs text-slate-400 font-mono">${w.pinyin}</div>
                         <div class="text-base font-bold text-slate-900 dark:text-white">${w.coreMeaning}</div>
-                        <div class="text-[11px] text-slate-400 mt-0.5">${w.lessonTitle} •${w.groupTitle}</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">${w.groupTitle}</div>
                       </div>
                     </div>
-                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${isDone ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">
                       ${isDone ? '✓ Đã học' : 'Chưa học'}
                     </span>
                   </div>
@@ -1365,7 +1375,7 @@
         `;
       },
 
-      // === F. MÀN HÌNH CÀI ĐẶT & QUẢN TRỊ DỮ LIỆU (SETTINGS) ===
+      // === F. MÀN HÌNH CÀI ĐẶT & QUẢN TRỊ TIẾN TRÌNH ===
       renderSettingsView() {
         const settings = Storage.getSettings();
         const voices = TTS.getVoices();
@@ -1379,7 +1389,7 @@
               <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Tùy chỉnh giọng đọc thiết bị, giao diện và sao lưu tiến trình.</p>
             </div>
 
-            <!-- Tùy chỉnh Audio TTS -->
+            <!-- Tùy chỉnh giọng đọc TTS -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm">
               <h3 class="font-bold text-sm text-slate-900 dark:text-white">1. Cấu hình giọng đọc (Web Speech API)</h3>
 
@@ -1421,7 +1431,7 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cỡ chữ ứng dụng:</label>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cỡ chữ giao diện:</label>
                 <div class="flex gap-2">
                   <button onclick="Renderer.setFontSize('15')" class="touch-target px-3.5 py-1.5 rounded-xl border text-xs ${settings.fontSize === '15' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">Nhỏ (15px)</button>
                   <button onclick="Renderer.setFontSize('16')" class="touch-target px-3.5 py-1.5 rounded-xl border text-xs ${settings.fontSize === '16' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">Vừa (16px)</button>
@@ -1430,10 +1440,10 @@
               </div>
             </div>
 
-            <!-- Sao lưu dữ liệu JSON -->
+            <!-- Sao lưu dữ liệu -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3 shadow-sm">
-              <h3 class="font-bold text-sm text-slate-900 dark:text-white">3. Quản lý tiến trình học tập</h3>
-              <p class="text-xs text-slate-500">Toàn bộ tiến độ học, câu trả lời và bài tập được lưu trên trình duyệt của máy bạn.</p>
+              <h3 class="font-bold text-sm text-slate-900 dark:text-white">3. Quản trị tiến trình học tập</h3>
+              <p class="text-xs text-slate-500">Dữ liệu được lưu trữ trực tiếp trên trình duyệt của bạn.</p>
               <div class="flex flex-wrap gap-2 pt-1">
                 <button onclick="Storage.exportBackupJSON()" class="touch-target px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">
                   📥 Xuất bản sao (.json)
@@ -1481,12 +1491,17 @@
           queue.push({ lang: "vi-VN", text: ex.vi, pause: 600 });
         });
         w.traps.forEach(t => queue.push(...t.audio));
+        if (w.summaryAudio && w.summaryAudio.length) {
+          queue.push(...w.summaryAudio);
+        } else if (w.summary) {
+          queue.push({ lang: "vi-VN", text: "Tổng kết cách dùng: " + w.summary });
+        }
         queue.push({
           lang: "vi-VN",
-          text: "Đã kết thúc phần giảng lý thuyết. Hệ thống tự động dừng lại để bạn luyện tập đặt câu hoặc làm bài kiểm tra."
+          text: "Đã kết thúc bài giảng lý thuyết. Hệ thống tự động dừng lại để bạn luyện tập đặt câu hoặc làm bài kiểm tra."
         });
 
-        TTS.playQueue(queue, `Nghe giảng tuần tự: #${w.index} (${w.hanzi})`);
+        TTS.playQueue(queue, `Giảng tuần tự: #${w.index} (${w.hanzi})`);
       },
 
       checkTrapMiniQuiz(wordId, trapIdx, optionIdx) {
@@ -1514,7 +1529,6 @@
           delete progress.completedWords[wordId];
         } else {
           progress.completedWords[wordId] = Date.now();
-          // Lên lịch ôn 1-3-7 ngày
           if (!progress.reviewsSchedule[wordId]) {
             progress.reviewsSchedule[wordId] = {
               stage: 1,
@@ -1573,7 +1587,8 @@
         const s = Storage.getSettings();
         s.rate = rate;
         Storage.saveSettings(s);
-        document.getElementById('btn-audio-rate').textContent = `${rate}×`;
+        const btn = document.getElementById('btn-audio-rate');
+        if (btn) btn.textContent = `${rate}×`;
         this.renderCurrentView();
       },
 
@@ -1628,15 +1643,12 @@
 
     // 6. KHỞI TẠO ỨNG DỤNG (APP BOOTSTRAP)
     function initializeApp() {
-      // 1. Khởi tạo Speech Synthesis
       TTS.init();
 
-      // 2. Tải thiết lập giao diện
       const settings = Storage.getSettings();
       Renderer.applyTheme(settings.theme);
       document.documentElement.style.setProperty('--app-font-size', `${settings.fontSize || '16'}px`);
 
-      // 3. Đọc và chuẩn hóa dữ liệu bài học
       const rawLessons = DataNormalizer.findRawLessons();
       if (rawLessons && Array.isArray(rawLessons) && rawLessons.length > 0) {
         AppStore.lessons = rawLessons.map((l, idx) => DataNormalizer.normalizeLesson(l, idx)).filter(Boolean);
@@ -1644,7 +1656,6 @@
 
       if (AppStore.lessons.length > 0) {
         const progress = Storage.getProgress();
-        // Khôi phục bài đang học dở
         let targetLesson = AppStore.lessons.find(l => l.id === progress.lastLessonId) || AppStore.lessons[0];
         AppStore.currentLesson = targetLesson;
 
@@ -1659,11 +1670,9 @@
         if (topInd) topInd.textContent = `${targetLesson.level} • ${targetLesson.title}`;
       }
 
-      // 4. Bật Router mặc định về Trang chủ
       Router.navigate('home');
     }
 
-    // Đảm bảo chạy sau khi toàn bộ script đã tải xong
     window.addEventListener('DOMContentLoaded', initializeApp);
   </script>
 </body>
