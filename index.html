@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <title>Học Tiếng Trung HSK1–HSK2 | Hệ Thống Học Âm Thanh Đa Tầng</title>
+  <title>HSK Giảng Giải Âm Thanh | Học & Nghe Thụ Động</title>
 
   <!-- PWA & Mobile Meta Tags -->
   <meta name="theme-color" content="#4f46e5" />
@@ -45,56 +45,151 @@
     :root {
       --app-font-size: 16px;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --ring: rgba(99,102,241,.45);
     }
-    html {
-      font-size: var(--app-font-size);
-      -webkit-tap-highlight-color: transparent;
+    html { font-size: var(--app-font-size); -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+    body.app-body {
+      padding-bottom: calc(6.8rem + var(--safe-bottom));
+      color: #0f172a;
+      background:
+        radial-gradient(900px 420px at 0% -8%, rgba(99,102,241,.16), transparent 60%),
+        radial-gradient(700px 420px at 105% 6%, rgba(168,85,247,.12), transparent 55%),
+        #f5f6fb;
+      background-attachment: fixed;
     }
-    body {
-      padding-bottom: calc(5.5rem + var(--safe-bottom));
+    .dark body.app-body {
+      color: #e2e8f0;
+      background:
+        radial-gradient(900px 460px at 0% -8%, rgba(99,102,241,.24), transparent 60%),
+        radial-gradient(700px 460px at 105% 6%, rgba(147,51,234,.16), transparent 55%),
+        #050816;
+      background-attachment: fixed;
     }
-    .hanzi-text {
-      font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    }
-    /* Điểm nhấn từ mục tiêu trong câu ví dụ */
-    .target-word-hl {
-      color: #d97706;
-      font-weight: 800;
-      text-decoration: underline;
-      text-underline-offset: 4px;
-    }
-    .dark .target-word-hl {
-      color: #fbbf24;
-    }
-    /* Custom Scrollbar */
+    .hanzi-text { font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    .target-word-hl { color: #d97706; font-weight: 800; text-decoration: underline; text-underline-offset: 4px; }
+    .dark .target-word-hl { color: #fbbf24; }
+
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .dark ::-webkit-scrollbar-thumb { background: #475569; }
     details summary::-webkit-details-marker { display: none; }
     .touch-target { min-height: 44px; min-width: 44px; }
+
+    /* ---------- Thẻ nội dung toàn app (áp cho mọi màn hình cũ) ---------- */
+    main .bg-white { background-color: rgba(255,255,255,.88); backdrop-filter: blur(10px); }
+    .dark main .dark\:bg-slate-900 { background-color: rgba(15,23,42,.72); backdrop-filter: blur(10px); }
+    main .border-slate-200 { border-color: rgba(148,163,184,.30); }
+    .dark main .dark\:border-slate-800 { border-color: rgba(71,85,105,.55); }
+    main .rounded-2xl, main .rounded-3xl {
+      box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 14px 30px -18px rgba(79,70,229,.30);
+    }
+    .dark main .rounded-2xl, .dark main .rounded-3xl {
+      box-shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 16px 32px -20px rgba(0,0,0,.7);
+    }
+    main button { transition: transform .12s ease, background-color .15s ease, box-shadow .15s ease; }
+    main button:active { transform: scale(.97); }
+    main h2, main h3 { letter-spacing: -.01em; }
+
+    /* ---------- Header ---------- */
+    .app-header {
+      background: rgba(255,255,255,.80); backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom: 1px solid rgba(148,163,184,.25);
+    }
+    .dark .app-header { background: rgba(8,12,30,.78); border-bottom-color: rgba(71,85,105,.45); }
+    .logo-badge {
+      background: linear-gradient(135deg,#6366f1,#8b5cf6 60%,#ec4899);
+      box-shadow: 0 6px 16px -6px rgba(99,102,241,.8);
+    }
+
+    /* ---------- Thanh điều hướng nổi ---------- */
+    .nav-shell {
+      background: rgba(255,255,255,.88); backdrop-filter: blur(18px) saturate(1.5);
+      border: 1px solid rgba(148,163,184,.28); border-radius: 22px;
+      box-shadow: 0 18px 40px -18px rgba(30,27,75,.35);
+    }
+    .dark .nav-shell { background: rgba(10,14,34,.86); border-color: rgba(71,85,105,.5); box-shadow: 0 18px 40px -18px rgba(0,0,0,.9); }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      height: 3.6rem; margin: 4px 2px; border-radius: 16px; font-size: 10.5px; font-weight: 600;
+      color: #64748b; transition: all .18s ease;
+    }
+    .dark .nav-item { color: #94a3b8; }
+    .nav-item svg { width: 20px; height: 20px; }
+    .nav-item.on { color: #4338ca; background: linear-gradient(180deg, rgba(99,102,241,.16), rgba(99,102,241,.07)); }
+    .dark .nav-item.on { color: #a5b4fc; background: linear-gradient(180deg, rgba(99,102,241,.28), rgba(99,102,241,.10)); }
+
+    /* ---------- Dock âm thanh ---------- */
+    .dock-card {
+      background: linear-gradient(135deg, rgba(30,27,75,.96), rgba(15,23,42,.96));
+      border: 1px solid rgba(129,140,248,.30); border-radius: 20px;
+      box-shadow: 0 18px 40px -16px rgba(15,23,42,.8);
+    }
+
+    /* ---------- Chip lựa chọn (tab Nghe thụ động) ---------- */
+    .chip {
+      display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+      min-height: 42px; padding: .5rem .95rem; border-radius: 14px; font-size: .8rem; font-weight: 700;
+      color: #475569; background: rgba(241,245,249,.95); border: 1px solid rgba(148,163,184,.35);
+    }
+    .dark .chip { color: #cbd5e1; background: rgba(30,41,59,.8); border-color: rgba(71,85,105,.6); }
+    .chip.on {
+      color: #fff; border-color: transparent;
+      background: linear-gradient(135deg,#6366f1,#7c3aed); box-shadow: 0 8px 18px -8px rgba(99,102,241,.9);
+    }
+    .mode-card {
+      text-align: left; width: 100%; padding: .85rem 1rem; border-radius: 18px;
+      border: 1.5px solid rgba(148,163,184,.35); background: rgba(248,250,252,.8);
+    }
+    .dark .mode-card { background: rgba(15,23,42,.6); border-color: rgba(71,85,105,.6); }
+    .mode-card.on { border-color: #6366f1; background: linear-gradient(135deg, rgba(99,102,241,.14), rgba(168,85,247,.10)); box-shadow: 0 0 0 3px rgba(99,102,241,.14); }
+    .opt-label { font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #6366f1; }
+    .dark .opt-label { color: #a5b4fc; }
+
+    /* ---------- Trình phát thụ động ---------- */
+    .studio {
+      position: relative; overflow: hidden; border-radius: 28px; color: #fff;
+      background: radial-gradient(520px 260px at 85% -10%, rgba(236,72,153,.35), transparent 60%),
+                  radial-gradient(520px 300px at 0% 110%, rgba(56,189,248,.28), transparent 60%),
+                  linear-gradient(145deg,#312e81,#1e1b4b 55%,#0f172a);
+      box-shadow: 0 28px 50px -24px rgba(49,46,129,.9);
+    }
+    .studio .glass { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(8px); }
+    .ctl {
+      width: 52px; height: 52px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.12); color: #fff; font-size: 1.15rem; border: 1px solid rgba(255,255,255,.16);
+    }
+    .ctl.big { width: 76px; height: 76px; font-size: 1.9rem; background: #fff; color: #4338ca; border: none; box-shadow: 0 14px 30px -10px rgba(255,255,255,.55); }
+    .eq { display: inline-flex; align-items: flex-end; gap: 3px; height: 18px; }
+    .eq i { display: block; width: 4px; height: 6px; border-radius: 2px; background: #a5b4fc; }
+    .eq.on i { animation: eqb .9s ease-in-out infinite; }
+    .eq.on i:nth-child(2) { animation-delay: .15s; } .eq.on i:nth-child(3) { animation-delay: .3s; } .eq.on i:nth-child(4) { animation-delay: .45s; }
+    @keyframes eqb { 0%,100% { height: 5px; } 50% { height: 18px; } }
+    .ps-word { border: 1px solid rgba(148,163,184,.3); border-radius: 14px; padding: .45rem .7rem; text-align: left; background: rgba(248,250,252,.8); }
+    .dark .ps-word { background: rgba(15,23,42,.6); border-color: rgba(71,85,105,.55); }
+    .ps-word.cur { border-color: #6366f1; background: rgba(99,102,241,.14); box-shadow: 0 0 0 2px rgba(99,102,241,.25); }
+    .ps-word.dim { opacity: .45; }
+
     @media (prefers-reduced-motion: reduce) {
       * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
 
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+<body class="app-body min-h-screen flex flex-col font-sans transition-colors duration-200">
 
   <!-- ================= TOP APP BAR ================= -->
-  <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+  <header class="app-header sticky top-0 z-30">
     <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2.5 cursor-pointer" onclick="Router.navigate('home')">
-        <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-sm">
-          汉
-        </div>
-        <div>
-          <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white leading-tight">HSK Giảng Giải Âm Thanh</h1>
-          <p id="top-lesson-indicator" class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 leading-none">Đang tải học liệu...</p>
+      <div class="flex items-center gap-2.5 cursor-pointer min-w-0" onclick="Router.navigate('home')">
+        <div class="logo-badge w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-base hanzi-text">汉</div>
+        <div class="min-w-0">
+          <h1 class="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight truncate">HSK Giảng Giải Âm Thanh</h1>
+          <p id="top-lesson-indicator" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 leading-none truncate">Đang tải học liệu...</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1">
         <button onclick="Router.navigate('search')" aria-label="Tìm kiếm từ vựng" class="touch-target p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition flex items-center justify-center">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </button>
@@ -111,8 +206,8 @@
   </main>
 
   <!-- ================= GLOBAL FLOATING AUDIO DOCK ================= -->
-  <aside id="audio-dock" class="fixed bottom-[4.2rem] left-0 right-0 z-30 px-3 transition-transform duration-300 ease-in-out pointer-events-none" aria-label="Bộ điều khiển âm thanh">
-    <div class="max-w-4xl mx-auto bg-slate-900/95 dark:bg-slate-900/95 text-white backdrop-blur-md rounded-2xl shadow-xl border border-slate-700/60 p-2.5 sm:p-3 flex items-center justify-between gap-3 pointer-events-auto">
+  <aside id="audio-dock" class="fixed bottom-[5.6rem] left-0 right-0 z-30 px-3 transition-transform duration-300 ease-in-out pointer-events-none" aria-label="Bộ điều khiển âm thanh">
+    <div class="dock-card max-w-3xl mx-auto text-white p-2.5 sm:p-3 flex items-center justify-between gap-3 pointer-events-auto">
       <div class="flex items-center gap-2.5 min-w-0 flex-1">
         <div id="audio-status-led" class="w-3 h-3 rounded-full bg-slate-500 shrink-0"></div>
         <div class="min-w-0 flex-1">
@@ -125,44 +220,38 @@
         <button onclick="TTS.togglePause()" id="btn-audio-playpause" title="Phát / Tạm dừng" class="touch-target px-2.5 sm:px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-1 shadow-sm">
           <span id="label-audio-playpause">⏯ Tạm dừng</span>
         </button>
-        <button onclick="TTS.replay()" title="Nghe lại đoạn này" class="touch-target px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs">
-          ↺
-        </button>
-        <button onclick="TTS.stop()" title="Dừng âm thanh" class="touch-target px-2 sm:px-2.5 py-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-xs">
-          ⏹
-        </button>
-        <button onclick="TTS.cycleRate()" id="btn-audio-rate" title="Tốc độ đọc" class="touch-target px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-mono text-xs">
-          1.0×
-        </button>
+        <button onclick="TTS.replay()" title="Nghe lại đoạn này" class="touch-target px-2 sm:px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 text-xs">↺</button>
+        <button onclick="TTS.stop()" title="Dừng âm thanh" class="touch-target px-2 sm:px-2.5 py-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-xs">⏹</button>
+        <button onclick="TTS.cycleRate()" id="btn-audio-rate" title="Tốc độ đọc" class="touch-target px-2 sm:px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-amber-300 font-mono text-xs">1.0×</button>
       </div>
     </div>
   </aside>
 
-  <!-- ================= BOTTOM NAVIGATION BAR ================= -->
-  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]" aria-label="Thanh điều hướng chính">
-    <div class="max-w-lg mx-auto grid grid-cols-5 h-16 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-      <button onclick="Router.navigate('home')" id="nav-btn-home" class="flex flex-col items-center justify-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+  <!-- ================= BOTTOM NAVIGATION BAR (nổi) ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 px-3 pointer-events-none" style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + .5rem)" aria-label="Thanh điều hướng chính">
+    <div class="nav-shell max-w-xl mx-auto grid grid-cols-6 pointer-events-auto px-1">
+      <button onclick="Router.navigate('home')" id="nav-btn-home" class="nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
         <span>Trang chủ</span>
       </button>
-
-      <button onclick="Router.navigate('lesson')" id="nav-btn-lesson" class="flex flex-col items-center justify-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+      <button onclick="Router.navigate('lesson')" id="nav-btn-lesson" class="nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
         <span>Bài học</span>
       </button>
-
-      <button onclick="Router.navigate('exercise')" id="nav-btn-exercise" class="flex flex-col items-center justify-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+      <button onclick="Router.navigate('passive')" id="nav-btn-passive" class="nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 15v-3a8 8 0 1116 0v3M4 15a2 2 0 012-2h1v6H6a2 2 0 01-2-2v-2zm16 0a2 2 0 00-2-2h-1v6h1a2 2 0 002-2v-2z"></path></svg>
+        <span>Nghe</span>
+      </button>
+      <button onclick="Router.navigate('exercise')" id="nav-btn-exercise" class="nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
         <span>Luyện tập</span>
       </button>
-
-      <button onclick="Router.navigate('review')" id="nav-btn-review" class="flex flex-col items-center justify-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+      <button onclick="Router.navigate('review')" id="nav-btn-review" class="nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
         <span>Ôn 1-3-7</span>
       </button>
-
-      <button onclick="Router.navigate('settings')" id="nav-btn-settings" class="flex flex-col items-center justify-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+      <button onclick="Router.navigate('settings')" id="nav-btn-settings" class="nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
         <span>Cá nhân</span>
       </button>
     </div>
@@ -491,6 +580,7 @@
       },
 
       playQueue(items, title = "Đang giảng bài...") {
+        if (typeof Passive !== 'undefined') Passive.halt(true);
         this.stop();
         if (!items || !items.length) return;
         if (!('speechSynthesis' in window)) {
@@ -650,6 +740,9 @@
     const Router = {
       navigate(tab, params = {}) {
         TTS.stop();
+        if (tab !== 'passive') Passive.halt(true);
+        const dockEl = document.getElementById('audio-dock');
+        if (dockEl) dockEl.classList.toggle('hidden', tab === 'passive');
         AppStore.currentTab = tab;
 
         if (params.lessonId) {
@@ -677,15 +770,10 @@
       },
 
       updateNavButtons(tab) {
-        const btns = ['home', 'lesson', 'exercise', 'review', 'settings'];
-        btns.forEach(b => {
+        ['home', 'lesson', 'passive', 'exercise', 'review', 'settings'].forEach(b => {
           const el = document.getElementById(`nav-btn-${b}`);
           if (!el) return;
-          if (b === tab) {
-            el.className = "flex flex-col items-center justify-center gap-1 text-indigo-600 dark:text-indigo-400 font-bold transition";
-          } else {
-            el.className = "flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 font-medium hover:text-indigo-600 transition";
-          }
+          el.className = 'nav-item' + (b === tab ? ' on' : '');
         });
       }
     };
@@ -733,6 +821,10 @@
           case 'settings':
             viewport.innerHTML = this.renderSettingsView();
             break;
+          case 'passive':
+            viewport.innerHTML = this.renderPassiveView();
+            Passive.syncUI();
+            break;
           default:
             viewport.innerHTML = this.renderHomeView();
         }
@@ -760,6 +852,8 @@
         const progress = Storage.getProgress();
         const totalWords = AppStore.lessons.reduce((acc, l) => acc + l.groups.reduce((gAcc, g) => gAcc + g.words.length, 0), 0);
         const learnedWordsCount = Object.keys(progress.completedWords || {}).length;
+        const pct = totalWords ? Math.round(learnedWordsCount / totalWords * 100) : 0;
+        const C = 2 * Math.PI * 34;
 
         const now = Date.now();
         let dueReviewCount = 0;
@@ -768,77 +862,249 @@
         });
 
         const curLesson = AppStore.currentLesson || AppStore.lessons[0];
+        const gradients = [
+          'from-indigo-500 to-violet-600', 'from-sky-500 to-indigo-600',
+          'from-fuchsia-500 to-pink-600', 'from-emerald-500 to-teal-600'
+        ];
 
         return `
-          <div class="space-y-6">
-            <!-- Hero Card -->
-            <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
-              <div class="flex items-center justify-between text-xs font-semibold text-indigo-200 uppercase tracking-wider mb-2">
-                <span>Cấp độ: ${curLesson.level}</span>
-                <span>Học âm thanh tương tác</span>
+          <div class="space-y-5">
+            <!-- Hero -->
+            <section class="relative overflow-hidden rounded-3xl p-6 sm:p-8 text-white" style="background:linear-gradient(135deg,#4338ca,#6d28d9 55%,#be185d);box-shadow:0 28px 50px -26px rgba(76,29,149,.9)">
+              <div class="hanzi-text absolute -right-4 -top-8 text-[9rem] font-black leading-none opacity-10 select-none">汉</div>
+              <div class="relative flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                  <div class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-indigo-100 bg-white/15 rounded-full px-3 py-1 mb-3">
+                    ${this.escapeHtml(curLesson.level)} • Học âm thanh tương tác
+                  </div>
+                  <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight mb-2">${this.escapeHtml(curLesson.title)}</h2>
+                  <p class="text-sm text-indigo-100/90 max-w-md leading-relaxed">
+                    Nghe giảng từng từ, phân tích ví dụ, tránh bẫy ngữ pháp của người Việt, hoặc bật nghe rảnh tay mọi lúc.
+                  </p>
+                </div>
+                <div class="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28">
+                  <svg viewBox="0 0 80 80" class="w-full h-full -rotate-90">
+                    <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="7"></circle>
+                    <circle cx="40" cy="40" r="34" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"
+                      stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - pct / 100)).toFixed(1)}"></circle>
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center leading-none">
+                    <span class="text-2xl font-black">${pct}%</span>
+                    <span class="text-[10px] font-semibold text-indigo-100 mt-1">${learnedWordsCount}/${totalWords} từ</span>
+                  </div>
+                </div>
               </div>
-              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">${curLesson.title}</h2>
-              <p class="text-sm text-indigo-100 max-w-xl mb-6 leading-relaxed">
-                Nghe giảng trực tiếp từng từ vựng, phân tích ví dụ chuẩn ngữ cảnh, nắm chắc bẫy ngữ pháp người Việt thường gặp và luyện tập đa tầng.
-              </p>
-              <div class="flex flex-wrap items-center gap-3">
-                <button onclick="Router.navigate('lesson', { lessonId: '${curLesson.id}' })" class="touch-target px-5 py-3 rounded-2xl bg-white text-indigo-900 font-bold text-sm shadow-md hover:bg-indigo-50 transition flex items-center gap-2">
-                  <span>Tiếp tục học ${curLesson.title}</span>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </button>
-                <button onclick="TTS.playQueue([{lang:'vi-VN', text:'Chào mừng bạn quay trở lại. Hãy lựa chọn bài học hoặc vào mục Ôn tập để củng cố các từ đến hạn.'}], 'Lời chào mở đầu')" class="touch-target px-4 py-3 rounded-2xl bg-indigo-500/40 hover:bg-indigo-500/60 text-white font-semibold text-sm backdrop-blur-sm border border-indigo-300/30">
-                  🔊 Lời nhắc hôm nay
-                </button>
-              </div>
-            </div>
+            </section>
 
-            <!-- Stats Bar -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+            <!-- Lối tắt -->
+            <section class="grid grid-cols-3 gap-3">
+              <button onclick="Router.navigate('lesson', { lessonId: '${curLesson.id}' })" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center">
+                <div class="text-2xl mb-1">📖</div>
+                <div class="text-xs font-extrabold text-slate-900 dark:text-white">Học tiếp</div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400">Nghe giảng</div>
+              </button>
+              <button onclick="Router.navigate('passive')" class="relative rounded-2xl p-4 text-center text-white" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 14px 28px -14px rgba(99,102,241,.9)">
+                <div class="text-2xl mb-1">🎧</div>
+                <div class="text-xs font-extrabold">Nghe thụ động</div>
+                <div class="text-[11px] text-indigo-100">Rảnh tay</div>
+              </button>
+              <button onclick="Router.navigate('review')" class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center">
+                ${dueReviewCount > 0 ? `<span class="absolute top-2 right-2 min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-white text-[11px] font-black flex items-center justify-center">${dueReviewCount}</span>` : ''}
+                <div class="text-2xl mb-1">🔁</div>
+                <div class="text-xs font-extrabold text-slate-900 dark:text-white">Ôn 1-3-7</div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400">${dueReviewCount} từ đến hạn</div>
+              </button>
+            </section>
+
+            <!-- Số liệu -->
+            <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
                 <div class="text-[11px] font-bold uppercase text-slate-400">Từ đã học</div>
                 <div class="text-2xl font-black text-slate-900 dark:text-white mt-1">${learnedWordsCount} <span class="text-xs font-normal text-slate-400">/ ${totalWords}</span></div>
               </div>
-              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
                 <div class="text-[11px] font-bold uppercase text-amber-500">Cần ôn hôm nay</div>
                 <div class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">${dueReviewCount} <span class="text-xs font-normal text-slate-400">từ</span></div>
               </div>
-              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
                 <div class="text-[11px] font-bold uppercase text-indigo-500">Nhóm chủ đề</div>
                 <div class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">${curLesson.groups.length}</div>
               </div>
-              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
                 <div class="text-[11px] font-bold uppercase text-emerald-500">Bài tập đã làm</div>
                 <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">${Object.keys(progress.completedExercises || {}).length}</div>
               </div>
-            </div>
+            </section>
 
-            <!-- Danh sách các nhóm bài học -->
-            <div class="space-y-3">
+            <!-- Nhóm từ vựng -->
+            <section class="space-y-3">
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white">Các nhóm từ vựng trong bài</h3>
-                <span class="text-xs text-slate-500">Bấm để vào học từng nhóm</span>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Các nhóm từ vựng</h3>
+                <span class="text-xs text-slate-500">Chạm để học</span>
               </div>
-              <div class="grid gap-3">
+              <div class="grid gap-3 sm:grid-cols-2">
                 ${curLesson.groups.map((g, gIdx) => {
-                  const wordsInGroup = g.words.length;
-                  const completedInGroup = g.words.filter(w => progress.completedWords[w.id]).length;
+                  const total = g.words.length;
+                  const done = g.words.filter(w => progress.completedWords[w.id]).length;
+                  const p = total ? Math.round(done / total * 100) : 0;
+                  const preview = g.words.slice(0, 6).map(w => w.hanzi).join(' · ');
                   return `
-                    <div onclick="Router.navigate('lesson', { lessonId: '${curLesson.id}', groupId: '${g.id}', wordId: '${g.words[0] ? g.words[0].id : ''}' })" class="cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-indigo-400 transition flex items-center justify-between gap-4 shadow-sm">
-                      <div class="space-y-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                          <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs uppercase">Nhóm ${gIdx + 1}</span>
-                          <span class="text-xs text-slate-400 font-medium">${completedInGroup}/${wordsInGroup} từ đã học</span>
+                    <div onclick="Router.navigate('lesson', { lessonId: '${curLesson.id}', groupId: '${g.id}', wordId: '${g.words[0] ? g.words[0].id : ''}' })" class="cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 hover:border-indigo-400 transition">
+                      <div class="flex items-start gap-3">
+                        <div class="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br ${gradients[gIdx % gradients.length]} text-white font-black text-lg flex items-center justify-center shadow-md">${gIdx + 1}</div>
+                        <div class="min-w-0 flex-1">
+                          <h4 class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">${this.escapeHtml(g.title)}</h4>
+                          <p class="hanzi-text text-sm font-bold text-indigo-600 dark:text-indigo-300 mt-1 truncate">${this.escapeHtml(preview)}</p>
                         </div>
-                        <h4 class="text-base font-bold text-slate-900 dark:text-white truncate">${g.title}</h4>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">${g.desc}</p>
                       </div>
-                      <button class="touch-target px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white font-semibold text-xs transition shrink-0">
-                        Học nhóm ➔
-                      </button>
-                    </div>
-                  `;
+                      <div class="mt-3 flex items-center gap-3">
+                        <div class="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:${p}%"></div></div>
+                        <span class="text-[11px] font-semibold text-slate-500">${done}/${total}</span>
+                      </div>
+                    </div>`;
                 }).join('')}
               </div>
+            </section>
+          </div>
+        `;
+      },
+
+      // === P. TAB NGHE THỤ ĐỘNG (PASSIVE LISTENING STUDIO) ===
+      renderPassiveView() {
+        const c = Passive.cfg;
+        const all = Passive.allWords();
+        const groups = Passive.groupList();
+        const scoped = Passive.scopedWords();
+        const scopedIds = new Set(scoped.map(x => x.w.id));
+        const allSelected = !c.groups || c.groups.length === 0 || scoped.length === all.length;
+        const rate = Number(Storage.getSettings().rate) || 1.0;
+        const q = v => typeof v === 'string' ? `'${v}'` : v;
+        const seg = (key, items) => items.map(it =>
+          `<button class="chip ${c[key] === it.v ? 'on' : ''}" onclick="Passive.setCfg('${key}', ${q(it.v)})">${it.label}</button>`).join('');
+
+        const modes = [
+          { v: 1, icon: '⚡', t: 'Chế độ 1 · Ôn nhanh', d: 'Từ tiếng Trung → nghĩa tiếng Việt.' },
+          { v: 2, icon: '🧩', t: 'Chế độ 2 · Ngấm ngữ cảnh', d: 'Từ → nghĩa → giải thích ngắn → các câu ví dụ (Trung + Việt).' },
+          { v: 3, icon: '🎙️', t: 'Chế độ 3 · Bài giảng Podcast', d: 'Toàn bộ lời giảng: nghĩa, cấu trúc, ví dụ, bẫy. Bỏ qua điểm dừng làm bài tập.' },
+          { v: 4, icon: '🌊', t: 'Chế độ 4 · Tắm ngôn ngữ', d: 'Chỉ tiếng Trung: từ mục tiêu và các câu ví dụ, luyện phản xạ nghe.' }
+        ];
+        const podcast = c.mode === 3;
+
+        return `
+          <div class="space-y-5">
+            <div>
+              <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">🎧 Nghe Thụ Động (Tổng Hợp ${all.length} Từ)</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Bật lên rồi đi bộ, làm việc nhà hoặc nghe trước khi ngủ. Không cần chạm vào màn hình.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-5 gap-5 items-start">
+              <!-- ===== TRÌNH PHÁT ===== -->
+              <section class="lg:col-span-2 lg:sticky lg:top-20">
+                <div class="studio p-5 sm:p-6">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-indigo-200">
+                      <span id="ps-eq" class="eq"><i></i><i></i><i></i><i></i></span>
+                      <span id="ps-state">Sẵn sàng</span>
+                    </div>
+                    <span id="ps-counter" class="text-xs font-bold text-indigo-100 glass rounded-full px-3 py-1">0 / ${scoped.length}</span>
+                  </div>
+
+                  <div class="text-center mt-5 mb-4 min-h-[8.5rem] flex flex-col items-center justify-center">
+                    <div id="ps-hanzi" class="hanzi-text text-6xl sm:text-7xl font-black leading-tight">🎧</div>
+                    <div id="ps-pinyin" class="text-lg font-semibold text-indigo-200 mt-1 min-h-[1.75rem]"></div>
+                    <div id="ps-meaning" class="text-sm text-indigo-100/90 mt-1 px-2">Nhấn ▶ để bắt đầu · ${scoped.length} từ</div>
+                  </div>
+
+                  <div id="ps-caption" class="hanzi-text glass rounded-2xl px-4 py-3 text-sm text-amber-200 font-semibold text-center min-h-[3rem] flex items-center justify-center leading-snug">
+                    Lời đang đọc sẽ hiện ở đây
+                  </div>
+
+                  <div class="mt-4 h-1.5 rounded-full bg-white/15 overflow-hidden"><div id="ps-progress" class="h-full rounded-full bg-gradient-to-r from-sky-300 to-fuchsia-300" style="width:0%"></div></div>
+
+                  <div class="flex items-center justify-center gap-4 mt-5">
+                    <button class="ctl" onclick="Passive.skip(-1)" aria-label="Từ trước">⏮</button>
+                    <button class="ctl big" id="ps-playpause" onclick="Passive.toggle()" aria-label="Phát / Tạm dừng">▶</button>
+                    <button class="ctl" onclick="Passive.skip(1)" aria-label="Từ kế tiếp">⏭</button>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2 mt-5">
+                    <div class="flex items-center gap-1.5">
+                      ${[0.75, 0.9, 1.0, 1.15, 1.25].map(r => `<button onclick="Passive.setRate(${r})" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold ${Math.abs(rate - r) < 0.01 ? 'bg-white text-indigo-700' : 'bg-white/10 text-indigo-100'}">${r}×</button>`).join('')}
+                    </div>
+                    <button onclick="Passive.stopAll()" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-rose-500/80 text-white">⏹ Dừng</button>
+                  </div>
+
+                  <div id="ps-sleep-pill" class="hidden mt-4 text-center text-xs font-bold text-amber-200 glass rounded-xl py-2">⏱ Tự dừng sau <span id="ps-sleep-left">--:--</span></div>
+                </div>
+              </section>
+
+              <!-- ===== TÙY CHỌN ===== -->
+              <section class="lg:col-span-3 space-y-4">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5">
+                  <div class="opt-label mb-3">1 · Chế độ nghe</div>
+                  <div class="grid sm:grid-cols-2 gap-2.5">
+                    ${modes.map(m => `
+                      <button class="mode-card ${c.mode === m.v ? 'on' : ''}" onclick="Passive.setCfg('mode', ${m.v})">
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${m.icon} ${m.t}</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-snug">${m.d}</div>
+                      </button>`).join('')}
+                  </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 space-y-5">
+                  <div>
+                    <div class="opt-label mb-2">2 · Phạm vi từ</div>
+                    <div class="flex flex-wrap gap-2">
+                      <button class="chip ${allSelected ? 'on' : ''}" onclick="Passive.selectAllGroups()">Tất cả ${all.length} từ</button>
+                      ${groups.map((g, i) => {
+                        const on = !allSelected && scoped.some(x => x.gid === g.id);
+                        return `<button class="chip ${on ? 'on' : ''}" onclick="Passive.toggleGroup('${g.id}')">Nhóm ${i + 1} <span class="opacity-70">(${g.words.length})</span></button>`;
+                      }).join('')}
+                    </div>
+                  </div>
+
+                  <div class="${podcast ? 'opacity-50' : ''}">
+                    <div class="opt-label mb-2">3 · Số lần đọc lặp tiếng Trung ${podcast ? '<span class="normal-case tracking-normal font-semibold text-slate-400">(không áp dụng cho Podcast)</span>' : ''}</div>
+                    <div class="flex flex-wrap gap-2">${seg('repeat', [{ v: 1, label: '1 lần' }, { v: 2, label: '2 lần' }, { v: 3, label: '3 lần' }])}</div>
+                  </div>
+
+                  <div class="${podcast ? 'opacity-50' : ''}">
+                    <div class="opt-label mb-2">4 · Nghỉ sau câu tiếng Trung (Shadowing)</div>
+                    <div class="flex flex-wrap gap-2">${seg('pause', [{ v: 1000, label: '1 giây · nghe liên tục' }, { v: 3000, label: '3 giây · đọc nhại theo' }])}</div>
+                  </div>
+
+                  <div>
+                    <div class="opt-label mb-2">5 · Chế độ phát</div>
+                    <div class="flex flex-wrap gap-2">${seg('order', [{ v: 'seq', label: '➡ Tuần tự' }, { v: 'shuffle', label: '🔀 Trộn ngẫu nhiên' }, { v: 'loop', label: '🔁 Lặp vô tận' }])}</div>
+                  </div>
+
+                  <div>
+                    <div class="opt-label mb-2">6 · Hẹn giờ tắt</div>
+                    <div class="flex flex-wrap gap-2">${seg('sleep', [{ v: 15, label: '15 phút' }, { v: 30, label: '30 phút' }, { v: 60, label: '60 phút' }, { v: 'end', label: 'Hết danh sách' }])}</div>
+                    ${c.order === 'loop' && c.sleep === 'end' ? '<p class="text-xs text-amber-600 dark:text-amber-400 mt-2">Đang lặp vô tận: nên chọn 15 / 30 / 60 phút để tự dừng khi ngủ.</p>' : ''}
+                  </div>
+
+                  <label class="flex items-center justify-between gap-3 cursor-pointer pt-1">
+                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">Giữ màn hình sáng khi đang phát<br><span class="text-xs font-normal text-slate-500">Một số máy sẽ ngừng đọc khi tắt màn hình.</span></span>
+                    <input type="checkbox" class="w-5 h-5 accent-indigo-600" ${c.wake ? 'checked' : ''} onchange="Passive.setCfg('wake', this.checked)">
+                  </label>
+                </div>
+
+                <!-- Danh sách từ trong phạm vi -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5">
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="opt-label">Danh sách phát · ${scoped.length} từ</div>
+                    <span class="text-[11px] text-slate-500">Chạm một từ để nghe từ đó</span>
+                  </div>
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    ${all.map(x => `
+                      <button id="ps-w-${x.w.id}" class="ps-word ${scopedIds.has(x.w.id) ? '' : 'dim'}" onclick="Passive.jump('${x.w.id}')">
+                        <div class="hanzi-text text-base font-black text-slate-900 dark:text-white">${this.escapeHtml(x.w.hanzi)}</div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${this.escapeHtml(x.w.pinyin)} · ${this.escapeHtml(x.w.coreMeaning)}</div>
+                      </button>`).join('')}
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
         `;
@@ -1641,9 +1907,409 @@
       }
     };
 
+    // 5B. TRÌNH PHÁT NGHE THỤ ĐỘNG (PASSIVE LISTENING ENGINE)
+    const PassiveStore = {
+      KEY: 'HSK_PASSIVE_CFG_V1',
+      defaults: { mode: 2, groups: [], repeat: 2, pause: 1000, order: 'seq', sleep: 'end', wake: true },
+      get() {
+        try {
+          const raw = localStorage.getItem(this.KEY);
+          return Object.assign({}, this.defaults, raw ? JSON.parse(raw) : {});
+        } catch (e) { return Object.assign({}, this.defaults); }
+      },
+      save(cfg) { try { localStorage.setItem(this.KEY, JSON.stringify(cfg)); } catch (e) {} }
+    };
+
+    const Passive = {
+      cfg: null,
+      playlist: [],
+      pos: 0,
+      queue: [],
+      qi: 0,
+      playing: false,
+      paused: false,
+      token: 0,
+      timer: null,
+      watchdog: null,
+      sleepTimer: null,
+      sleepEndAt: 0,
+      wakeLock: null,
+      utter: null,
+      statusText: '',
+
+      init() {
+        this.cfg = PassiveStore.get();
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible' && this.playing) this.acquireWake();
+        });
+      },
+
+      // ---------- Dữ liệu ----------
+      allWords() {
+        const out = [];
+        AppStore.lessons.forEach(l => l.groups.forEach(g => g.words.forEach(w => out.push({ w, gid: g.id }))));
+        return out;
+      },
+      groupList() {
+        const arr = [];
+        AppStore.lessons.forEach(l => l.groups.forEach(g => arr.push(g)));
+        return arr;
+      },
+      scopedWords() {
+        const all = this.allWords();
+        const sel = this.cfg.groups;
+        if (!sel || !sel.length) return all;
+        const f = all.filter(x => sel.includes(x.gid));
+        return f.length ? f : all;
+      },
+      buildPlaylist() {
+        const list = this.scopedWords().slice();
+        if (this.cfg.order === 'shuffle') {
+          for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+          }
+        }
+        return list;
+      },
+
+      // ---------- Dựng hàng đợi âm thanh cho 1 từ ----------
+      buildItems(entry) {
+        const w = entry.w, c = this.cfg;
+        const rep = Number(c.repeat) || 1, sp = Number(c.pause) || 1000;
+        const zh = (text) => Array.from({ length: rep }, () => ({ lang: 'zh-CN', text, pause: sp }));
+        const vi = (text, pause = 600) => ({ lang: 'vi-VN', text, pause });
+        let q = [];
+
+        if (c.mode === 1) {
+          q.push(...zh(w.hanzi), vi(w.coreMeaning, 900));
+        } else if (c.mode === 2) {
+          q.push(...zh(w.hanzi), vi(w.coreMeaning, 700));
+          const brief = w.meaning.keyPoint || w.meaning.situation;
+          if (brief) q.push(vi(brief, 900));
+          w.examples.forEach(ex => {
+            if (ex.zh) q.push(...zh(ex.zh));
+            if (ex.vi) q.push(vi(ex.vi, 900));
+          });
+        } else if (c.mode === 3) {
+          q.push(vi(`Từ số ${w.index}.`, 400));
+          q.push(...w.introAudio.map(x => ({ ...x })));
+          q.push(...w.meaning.audio.map(x => ({ ...x })));
+          w.structures.forEach(s => q.push(...s.audio.map(x => ({ ...x }))));
+          if (w.examples.length) {
+            q.push(vi('Các câu ví dụ thực tế:', 500));
+            w.examples.forEach(ex => {
+              if (ex.explainAudio.length) q.push(...ex.explainAudio.map(x => ({ ...x })));
+              else {
+                q.push({ lang: 'zh-CN', text: ex.zh, pause: 1000 });
+                q.push(vi(ex.vi, 600));
+              }
+            });
+          }
+          w.traps.forEach(t => q.push(...t.audio.map(x => ({ ...x }))));
+          if (w.summaryAudio.length) q.push(...w.summaryAudio.map(x => ({ ...x })));
+          else if (w.summary) q.push(vi('Tổng kết: ' + w.summary, 800));
+        } else {
+          q.push(...zh(w.hanzi));
+          w.examples.forEach(ex => { if (ex.zh) q.push(...zh(ex.zh)); });
+        }
+
+        q = q.filter(it => String(it.text || '').replace(/\[.*?\]/g, '').trim());
+        if (q.length) q[q.length - 1].pause = Math.max(q[q.length - 1].pause || 0, 1500);
+        return q;
+      },
+
+      // ---------- Điều khiển phát ----------
+      start(fromWordId) {
+        if (!('speechSynthesis' in window)) { this.setState('Thiết bị không hỗ trợ đọc giọng nói.'); return; }
+        TTS.stop();
+        this.statusText = '';
+        this.clearTimers();
+        this.token++;
+        this.playlist = this.buildPlaylist();
+        if (!this.playlist.length) return;
+        let idx = 0;
+        if (fromWordId) { const f = this.playlist.findIndex(x => x.w.id === fromWordId); if (f >= 0) idx = f; }
+        this.pos = idx;
+        this.playing = true;
+        this.paused = false;
+        this.armSleep();
+        this.acquireWake();
+        this.loadWord();
+      },
+
+      loadWord() {
+        const entry = this.playlist[this.pos];
+        if (!entry) { this.finish('Đã phát hết danh sách.'); return; }
+        this.queue = this.buildItems(entry);
+        this.qi = 0;
+        this.syncUI();
+        this.next();
+      },
+
+      next() {
+        if (!this.playing || this.paused) return;
+        if (this.qi >= this.queue.length) { this.advanceWord(); return; }
+
+        const token = this.token;
+        const item = this.queue[this.qi];
+        const text = String(item.text).replace(/\[.*?\]/g, '').trim();
+        const lang = item.lang || 'vi-VN';
+        const isZh = lang.startsWith('zh');
+
+        const cap = document.getElementById('ps-caption');
+        if (cap) cap.textContent = (isZh ? '🇨🇳 ' : '🇻🇳 ') + text;
+        this.updateProgress();
+
+        const u = new SpeechSynthesisUtterance(text);
+        this.utter = u;
+        u.lang = lang;
+        const voice = TTS.findBestVoice(lang);
+        if (voice) u.voice = voice;
+        const rate = Number(Storage.getSettings().rate) || 1.0;
+        u.rate = rate;
+
+        let done = false;
+        const step = () => {
+          if (done || token !== this.token || !this.playing || this.paused) return;
+          done = true;
+          clearTimeout(this.watchdog);
+          const p = typeof item.pause === 'number' ? Math.max(0, item.pause) : 350;
+          this.timer = setTimeout(() => {
+            if (token !== this.token) return;
+            this.qi++;
+            this.next();
+          }, p);
+        };
+        u.onend = step;
+        u.onerror = (e) => {
+          if (e.error === 'canceled' || e.error === 'interrupted') return;
+          console.warn('Passive TTS error:', e.error);
+          step();
+        };
+
+        // Chốt chặn: một số trình duyệt đôi khi không bắn sự kiện onend
+        clearTimeout(this.watchdog);
+        this.watchdog = setTimeout(step, Math.max(6000, (text.length * (isZh ? 700 : 280)) / rate + 3000));
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      },
+
+      advanceWord() {
+        this.pos++;
+        if (this.pos >= this.playlist.length) {
+          if (this.cfg.order === 'loop') this.pos = 0;
+          else { this.finish('Đã phát hết danh sách.'); return; }
+        }
+        this.loadWord();
+      },
+
+      toggle() {
+        if (!this.playing) { this.start(); return; }
+        if (this.paused) {
+          this.paused = false;
+          this.acquireWake();
+          this.syncUI();
+          this.next();
+        } else {
+          this.paused = true;
+          this.token++;
+          this.clearTimers(true);
+          window.speechSynthesis.cancel();
+          this.syncUI();
+        }
+      },
+
+      skip(delta) {
+        if (!this.playing) { this.start(); if (!this.playing) return; }
+        let p = this.pos + delta;
+        if (p < 0) p = 0;
+        if (p >= this.playlist.length) {
+          if (this.cfg.order === 'loop') p = 0;
+          else { this.finish('Đã phát hết danh sách.'); return; }
+        }
+        this.token++;
+        this.clearTimers(true);
+        window.speechSynthesis.cancel();
+        this.pos = p;
+        this.paused = false;
+        this.playing = true;
+        this.loadWord();
+      },
+
+      jump(wordId) { this.start(wordId); },
+
+      // Dừng hẳn (người dùng bấm nút Dừng)
+      stopAll() {
+        this.halt(true);
+        this.pos = 0;
+        this.setState('Đã dừng');
+        this.resetDisplay();
+      },
+
+      // Dừng nội bộ (đổi tab, hết giờ, hết danh sách)
+      halt(silent) {
+        const was = this.playing;
+        this.token++;
+        this.clearTimers();
+        this.playing = false;
+        this.paused = false;
+        this.sleepEndAt = 0;
+        this.releaseWake();
+        if (was && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (!silent) this.syncUI();
+      },
+
+      finish(msg) {
+        this.halt(true);
+        this.setState(msg);
+        this.syncUI();
+      },
+
+      clearTimers(keepSleep) {
+        clearTimeout(this.timer);
+        clearTimeout(this.watchdog);
+        if (!keepSleep && this.sleepTimer) { clearInterval(this.sleepTimer); this.sleepTimer = null; }
+      },
+
+      // ---------- Cấu hình ----------
+      setCfg(key, val) {
+        this.cfg[key] = val;
+        PassiveStore.save(this.cfg);
+        if (this.playing && (key === 'order')) {
+          // đổi thứ tự phát: dựng lại danh sách từ từ hiện tại
+          const cur = this.playlist[this.pos];
+          this.start(cur ? cur.w.id : undefined);
+        }
+        if (key === 'sleep' && this.playing) this.armSleep();
+        Renderer.renderCurrentView();
+        this.syncUI();
+      },
+      selectAllGroups() {
+        this.cfg.groups = [];
+        PassiveStore.save(this.cfg);
+        this.afterScopeChange();
+      },
+      toggleGroup(gid) {
+        const all = this.allWords();
+        const allIds = [...new Set(all.map(x => x.gid))];
+        let sel = (this.cfg.groups && this.cfg.groups.length) ? this.cfg.groups.slice() : [];
+        const wasAll = sel.length === 0;
+        if (wasAll) sel = [gid];
+        else if (sel.includes(gid)) sel = sel.filter(x => x !== gid);
+        else sel.push(gid);
+        if (sel.length === 0 || sel.length === allIds.length) sel = [];
+        this.cfg.groups = sel;
+        PassiveStore.save(this.cfg);
+        this.afterScopeChange();
+      },
+      afterScopeChange() {
+        if (this.playing) this.start();
+        Renderer.renderCurrentView();
+        this.syncUI();
+      },
+      setRate(r) {
+        const s = Storage.getSettings();
+        s.rate = r;
+        Storage.saveSettings(s);
+        Renderer.renderCurrentView();
+        this.syncUI();
+      },
+
+      // ---------- Hẹn giờ & giữ sáng màn hình ----------
+      armSleep() {
+        if (this.sleepTimer) { clearInterval(this.sleepTimer); this.sleepTimer = null; }
+        const m = this.cfg.sleep;
+        if (typeof m !== 'number') { this.sleepEndAt = 0; this.updateSleepPill(); return; }
+        this.sleepEndAt = Date.now() + m * 60000;
+        this.sleepTimer = setInterval(() => {
+          if (Date.now() >= this.sleepEndAt) {
+            this.finish('Đã hết giờ hẹn · tự động dừng.');
+            return;
+          }
+          this.updateSleepPill();
+        }, 1000);
+        this.updateSleepPill();
+      },
+      updateSleepPill() {
+        const pill = document.getElementById('ps-sleep-pill');
+        const left = document.getElementById('ps-sleep-left');
+        if (!pill || !left) return;
+        if (!this.playing || !this.sleepEndAt) { pill.classList.add('hidden'); return; }
+        const s = Math.max(0, Math.round((this.sleepEndAt - Date.now()) / 1000));
+        left.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+        pill.classList.remove('hidden');
+      },
+      async acquireWake() {
+        try {
+          if (this.cfg.wake && 'wakeLock' in navigator && !this.wakeLock) {
+            this.wakeLock = await navigator.wakeLock.request('screen');
+            this.wakeLock.addEventListener('release', () => { this.wakeLock = null; });
+          }
+        } catch (e) { /* bỏ qua */ }
+      },
+      releaseWake() {
+        try { if (this.wakeLock) this.wakeLock.release(); } catch (e) {}
+        this.wakeLock = null;
+      },
+
+      // ---------- Cập nhật giao diện ----------
+      setState(msg) { this.statusText = msg || ''; },
+
+      resetDisplay() {
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('ps-hanzi', '🎧'); set('ps-pinyin', '');
+        set('ps-meaning', `Nhấn ▶ để bắt đầu · ${this.scopedWords().length} từ`);
+        set('ps-caption', 'Lời đang đọc sẽ hiện ở đây');
+        const bar = document.getElementById('ps-progress'); if (bar) bar.style.width = '0%';
+        this.syncUI();
+      },
+
+      updateProgress() {
+        const bar = document.getElementById('ps-progress');
+        if (!bar || !this.playlist.length) return;
+        const frac = (this.pos + (this.queue.length ? this.qi / this.queue.length : 0)) / this.playlist.length;
+        bar.style.width = Math.min(100, Math.round(frac * 100)) + '%';
+      },
+
+      syncUI() {
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        const entry = this.playing ? this.playlist[this.pos] : null;
+
+        let state = 'Sẵn sàng';
+        if (this.playing && this.paused) state = 'Tạm dừng';
+        else if (this.playing) state = 'Đang phát';
+        else if (this.statusText) state = this.statusText;
+        set('ps-state', state);
+        set('ps-playpause', this.playing && !this.paused ? '⏸' : '▶');
+
+        const eq = document.getElementById('ps-eq');
+        if (eq) eq.classList.toggle('on', this.playing && !this.paused);
+
+        if (entry) {
+          set('ps-hanzi', entry.w.hanzi);
+          set('ps-pinyin', entry.w.pinyin);
+          set('ps-meaning', entry.w.coreMeaning);
+          set('ps-counter', `${this.pos + 1} / ${this.playlist.length}`);
+        } else {
+          set('ps-counter', `0 / ${this.scopedWords().length}`);
+        }
+
+        document.querySelectorAll('.ps-word').forEach(el => el.classList.remove('cur'));
+        if (entry) {
+          const el = document.getElementById(`ps-w-${entry.w.id}`);
+          if (el) el.classList.add('cur');
+        }
+        this.updateProgress();
+        this.updateSleepPill();
+      }
+    };
+
     // 6. KHỞI TẠO ỨNG DỤNG (APP BOOTSTRAP)
     function initializeApp() {
       TTS.init();
+      Passive.init();
 
       const settings = Storage.getSettings();
       Renderer.applyTheme(settings.theme);
